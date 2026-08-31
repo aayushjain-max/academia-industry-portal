@@ -1,0 +1,2 @@
+class RAGRetriever:
+    pass

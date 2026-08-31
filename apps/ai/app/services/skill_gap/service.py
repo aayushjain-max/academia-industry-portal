@@ -1,0 +1,2 @@
+class SkillGapService:
+    pass

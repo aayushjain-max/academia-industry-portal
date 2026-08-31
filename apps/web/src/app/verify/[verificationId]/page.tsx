@@ -1,0 +1,1 @@
+export default function PublicVerificationPage({ params }: { params: { verificationId: string } }) { return <div className='container mx-auto p-6'><h1 className='text-2xl font-bold'>Credential Verification</h1></div>; }

@@ -1,0 +1,144 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: acad_portal_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-academia_industry_db}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres_secure_password_here}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infrastructure/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - portal_network
+
+  redis:
+    image: redis:7-alpine
+    container_name: acad_portal_redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - portal_network
+
+  backend:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/backend/Dockerfile
+    container_name: acad_portal_backend
+    restart: unless-stopped
+    command: python apps/api/manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ./apps/api:/app/apps/api
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - portal_network
+
+  celery-worker:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/backend/Dockerfile
+    container_name: acad_portal_celery_worker
+    restart: unless-stopped
+    command: celery -A config worker -l info
+    volumes:
+      - ./apps/api:/app/apps/api
+    env_file:
+      - .env
+    depends_on:
+      - backend
+      - redis
+    networks:
+      - portal_network
+
+  celery-beat:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/backend/Dockerfile
+    container_name: acad_portal_celery_beat
+    restart: unless-stopped
+    command: celery -A config beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    volumes:
+      - ./apps/api:/app/apps/api
+    env_file:
+      - .env
+    depends_on:
+      - backend
+      - redis
+    networks:
+      - portal_network
+
+  ai:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/ai/Dockerfile
+    container_name: acad_portal_ai
+    restart: unless-stopped
+    command: uvicorn main:app --host 0.0.0.0 --port 8001 --reload
+    volumes:
+      - ./apps/ai:/app/apps/ai
+    ports:
+      - "8001:8001"
+    env_file:
+      - .env
+    depends_on:
+      - redis
+    networks:
+      - portal_network
+
+  frontend:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/frontend/Dockerfile
+    container_name: acad_portal_frontend
+    restart: unless-stopped
+    volumes:
+      - ./apps/web:/app/apps/web
+      - /app/apps/web/node_modules
+      - /app/apps/web/.next
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    depends_on:
+      - backend
+      - ai
+    networks:
+      - portal_network
+
+  nginx:
+    image: nginx:alpine
+    container_name: acad_portal_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./infrastructure/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - frontend
+      - backend
+      - ai
+    networks:
+      - portal_network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  portal_network:
+    driver: bridge

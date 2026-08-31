@@ -1,0 +1,20 @@
+{
+  "name": "academia-industry-portal",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Centralized Academia-Industry Collaboration Portal connecting Students, Industries, Academicians and Institutions",
+  "scripts": {
+    "dev": "pnpm --filter web dev",
+    "build": "pnpm --filter \"*\" build",
+    "lint": "pnpm --filter \"*\" lint",
+    "typecheck": "pnpm --filter \"*\" typecheck",
+    "test": "pnpm --filter \"*\" test",
+    "clean": "pnpm -r exec rm -rf node_modules .next dist build"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "prettier": "^3.2.5",
+    "typescript": "^5.4.0"
+  },
+  "packageManager": "pnpm@9.1.0"
+}

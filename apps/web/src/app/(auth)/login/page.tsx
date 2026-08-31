@@ -1,0 +1,1 @@
+export default function LoginPage() { return <div className='p-6 bg-white rounded shadow-md w-96'><h2 className='text-xl font-bold mb-4'>Sign In</h2><p className='text-sm text-slate-500'>Enter your credentials to access your dashboard.</p></div>; }

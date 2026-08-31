@@ -1,0 +1,1 @@
+export default function PublicPortfolioPage({ params }: { params: { username: string } }) { return <div className='container mx-auto p-6'><h1 className='text-2xl font-bold'>Public Digital Portfolio</h1></div>; }

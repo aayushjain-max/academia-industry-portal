@@ -1,0 +1,2 @@
+version: '3.8'
+# Production configuration with Gunicorn, Uvicorn workers, SSL certs
