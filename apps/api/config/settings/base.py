@@ -1,4 +1,5 @@
 import os
+import socket
 from pathlib import Path
 from datetime import timedelta
 
@@ -95,16 +96,45 @@ TEMPLATES = [
 WSGI_APPLICATION = 'config.wsgi.application'
 ASGI_APPLICATION = 'config.asgi.application'
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('POSTGRES_DB', 'academia_industry_db'),
-        'USER': os.getenv('POSTGRES_USER', 'postgres'),
-        'PASSWORD': os.getenv('POSTGRES_PASSWORD', 'postgres_secure_password_here'),
-        'HOST': os.getenv('POSTGRES_HOST', 'localhost'),
-        'PORT': os.getenv('POSTGRES_PORT', '5432'),
+def _is_tcp_port_open(host: str, port: int, timeout: float = 0.5) -> bool:
+    try:
+        with socket.create_connection((host, int(port)), timeout=timeout):
+            return True
+    except (socket.timeout, ConnectionRefusedError, OSError):
+        return False
+
+POSTGRES_HOST = os.getenv('POSTGRES_HOST', 'localhost')
+POSTGRES_PORT = int(os.getenv('POSTGRES_PORT', 5432))
+USE_SQLITE_ENV = os.getenv('USE_SQLITE', '').lower()
+
+# Check if SQLite is explicitly requested or if PostgreSQL is offline
+if USE_SQLITE_ENV in ('true', '1'):
+    postgres_available = False
+elif USE_SQLITE_ENV in ('false', '0'):
+    postgres_available = True
+else:
+    postgres_available = _is_tcp_port_open(POSTGRES_HOST, POSTGRES_PORT)
+
+if postgres_available:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.getenv('POSTGRES_DB', 'academia_industry_db'),
+            'USER': os.getenv('POSTGRES_USER', 'postgres'),
+            'PASSWORD': os.getenv('POSTGRES_PASSWORD', 'postgres_secure_password_here'),
+            'HOST': POSTGRES_HOST,
+            'PORT': str(POSTGRES_PORT),
+        }
     }
-}
+    print(f"[DATABASE] Connected to PostgreSQL at {POSTGRES_HOST}:{POSTGRES_PORT}")
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
+    print(f"[DATABASE AUTO-FALLBACK] PostgreSQL not reachable at {POSTGRES_HOST}:{POSTGRES_PORT}. Using local SQLite database: {BASE_DIR / 'db.sqlite3'}")
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
@@ -154,8 +184,34 @@ SPECTACULAR_SETTINGS = {
     'SERVE_INCLUDE_SCHEMA': False,
 }
 
-CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://localhost:6379/1')
-CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'redis://localhost:6379/2')
+REDIS_HOST = os.getenv('REDIS_HOST', 'localhost')
+REDIS_PORT = int(os.getenv('REDIS_PORT', 6379))
+redis_available = _is_tcp_port_open(REDIS_HOST, REDIS_PORT)
+
+if redis_available:
+    CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', f'redis://{REDIS_HOST}:{REDIS_PORT}/1')
+    CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', f'redis://{REDIS_HOST}:{REDIS_PORT}/2')
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+            'LOCATION': os.getenv('REDIS_URL', f'redis://{REDIS_HOST}:{REDIS_PORT}/0'),
+        }
+    }
+    CELERY_TASK_ALWAYS_EAGER = False
+    print(f"[CELERY/REDIS] Connected to Redis broker at {REDIS_HOST}:{REDIS_PORT}")
+else:
+    CELERY_BROKER_URL = 'memory://'
+    CELERY_RESULT_BACKEND = 'cache+memory://'
+    CELERY_TASK_ALWAYS_EAGER = True
+    CELERY_TASK_EAGER_PROPAGATES = True
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'portal-local-cache',
+        }
+    }
+    print(f"[CELERY/REDIS AUTO-FALLBACK] Redis not reachable at {REDIS_HOST}:{REDIS_PORT}. Enabled in-memory Celery eager execution & local cache.")
+
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'

@@ -2,13 +2,37 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: 0 0% 100%;
-  --foreground: 222.2 84% 4.9%;
-}
-
 @layer base {
   body {
-    @apply bg-slate-50 text-slate-900 antialiased dark:bg-slate-950 dark:text-slate-50;
+    @apply bg-bg-canvas text-fg-primary antialiased selection:bg-accent-signal selection:text-fg-primary min-h-screen flex flex-col font-body-md;
   }
+}
+
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  display: inline-block;
+  vertical-align: middle;
+  line-height: 1;
+}
+
+/* Tabular numeric rendering */
+.tnum,
+.tabular-nums {
+  font-feature-settings: "tnum" 1;
+}
+
+/* Crisp razor-thin dark slate scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: #FFFFFF;
+  border-left: 1px solid #18181B;
+}
+::-webkit-scrollbar-thumb {
+  background: #18181B;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #FACC15;
 }

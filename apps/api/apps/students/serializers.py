@@ -1,7 +1,19 @@
 from rest_framework import serializers
-from .models import *
+from .models import StudentProfile
 
-class StudentsSerializer(serializers.ModelSerializer):
+class StudentProfileSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(source='user.email', read_only=True)
+    first_name = serializers.CharField(source='user.first_name', read_only=True)
+    last_name = serializers.CharField(source='user.last_name', read_only=True)
+
     class Meta:
-        model = StudentsItem if 'students' != 'users' else User
-        fields = '__all__'
+        model = StudentProfile
+        fields = [
+            'id', 'email', 'first_name', 'last_name',
+            'institution_name', 'roll_number', 'degree', 'department',
+            'year_of_study', 'cgpa', 'headline', 'bio',
+            'resume_url', 'github_url', 'linkedin_url', 'portfolio_url',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
+

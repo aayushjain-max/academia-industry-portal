@@ -1,9 +1,10 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import SkillPassportsViewSet
+from .views import SkillPassportViewSet
 
 router = DefaultRouter()
-router.register(r'', SkillPassportsViewSet, basename='skill_passports')
+router.register(r'', SkillPassportViewSet, basename='skill-passports')
+
 
 urlpatterns = [
     path('', include(router.urls)),

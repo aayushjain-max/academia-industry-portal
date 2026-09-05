@@ -1,10 +1,11 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import OpportunitiesViewSet
+from .views import OpportunityViewSet
 
 router = DefaultRouter()
-router.register(r'', OpportunitiesViewSet, basename='opportunities')
+router.register(r'', OpportunityViewSet, basename='opportunities')
 
 urlpatterns = [
     path('', include(router.urls)),
 ]
+

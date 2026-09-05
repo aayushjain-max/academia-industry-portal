@@ -1,10 +1,9 @@
-from rest_framework import viewsets, permissions, status
-from rest_framework.response import Response
-from .models import *
-from .serializers import RolesSerializer
-from .services import *
+from rest_framework import viewsets, permissions
+from .models import RoleDefinition
+from .serializers import RoleDefinitionSerializer
 
-class RolesViewSet(viewsets.ModelViewSet):
-    queryset = (RolesItem if 'roles' != 'users' else User).objects.all()
-    serializer_class = RolesSerializer
-    permission_classes = [permissions.IsAuthenticated]
+class RoleDefinitionViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = RoleDefinition.objects.filter(is_active=True)
+    serializer_class = RoleDefinitionSerializer
+    permission_classes = [permissions.AllowAny]
+

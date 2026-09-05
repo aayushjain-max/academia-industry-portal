@@ -1,7 +1,8 @@
 from rest_framework import serializers
-from .models import *
+from .models import RoleDefinition
 
-class RolesSerializer(serializers.ModelSerializer):
+class RoleDefinitionSerializer(serializers.ModelSerializer):
     class Meta:
-        model = RolesItem if 'roles' != 'users' else User
+        model = RoleDefinition
         fields = '__all__'
+

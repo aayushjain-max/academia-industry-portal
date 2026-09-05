@@ -2,14 +2,20 @@ import uuid
 from django.db import models
 from django.conf import settings
 
-class AnalyticsItem(models.Model):
+class AnalyticsSnapshot(models.Model):
+    SNAPSHOT_TYPES = [
+        ('INSTITUTION', 'Institution Overview'),
+        ('HEATMAP', 'Skill Demand Heatmap'),
+        ('INDUSTRY', 'Industry Trends'),
+    ]
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    title = models.CharField(max_length=255, blank=True, default='')
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    snapshot_type = models.CharField(max_length=30, choices=SNAPSHOT_TYPES)
+    data = models.JSONField(default=dict)
+    generated_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ['-created_at']
+        ordering = ['-generated_at']
 
     def __str__(self):
-        return f"Analytics {self.id}"
+        return f"Snapshot: {self.snapshot_type} ({self.generated_at.strftime('%Y-%m-%d %H:%M')})"
+

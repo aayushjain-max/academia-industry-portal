@@ -1,7 +1,7 @@
 from rest_framework import serializers
-from .models import *
+from .models import SearchHistory
 
-class SearchSerializer(serializers.ModelSerializer):
+class SearchHistorySerializer(serializers.ModelSerializer):
     class Meta:
-        model = SearchItem if 'search' != 'users' else User
+        model = SearchHistory
         fields = '__all__'

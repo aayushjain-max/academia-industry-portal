@@ -1,7 +1,9 @@
 from rest_framework import serializers
-from .models import *
+from .models import InstitutionProfile
 
-class InstitutionsSerializer(serializers.ModelSerializer):
+class InstitutionProfileSerializer(serializers.ModelSerializer):
     class Meta:
-        model = InstitutionsItem if 'institutions' != 'users' else User
+        model = InstitutionProfile
         fields = '__all__'
+        read_only_fields = ['id', 'created_at', 'updated_at']
+

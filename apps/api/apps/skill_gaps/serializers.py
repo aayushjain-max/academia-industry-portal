@@ -1,7 +1,9 @@
 from rest_framework import serializers
-from .models import *
+from .models import SkillGapAnalysis
 
-class SkillGapsSerializer(serializers.ModelSerializer):
+class SkillGapAnalysisSerializer(serializers.ModelSerializer):
     class Meta:
-        model = SkillGapsItem if 'skill_gaps' != 'users' else User
+        model = SkillGapAnalysis
         fields = '__all__'
+        read_only_fields = ['id', 'student', 'analyzed_at']
+

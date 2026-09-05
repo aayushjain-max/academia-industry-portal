@@ -1,10 +1,9 @@
 from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
-from .models import *
-from .serializers import AuditSerializer
-from .services import *
+from .models import AuditLog
+from .serializers import AuditLogSerializer
 
-class AuditViewSet(viewsets.ModelViewSet):
-    queryset = (AuditItem if 'audit' != 'users' else User).objects.all()
-    serializer_class = AuditSerializer
-    permission_classes = [permissions.IsAuthenticated]
+class AuditViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = AuditLog.objects.all()
+    serializer_class = AuditLogSerializer
+    permission_classes = [permissions.IsAdminUser]

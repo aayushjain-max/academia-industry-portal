@@ -1,7 +1,1 @@
-import React from 'react';
-
-export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {}
-
-export const Card: React.FC<CardProps> = ({ children, className = '', ...props }) => {
-  return <div className={`ui-card ${className}`} {...props}>{children}</div>;
-};
+export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter, TelemetryCard, type CardProps, type TelemetryCardProps } from '@portal/ui';
