@@ -111,6 +111,33 @@ export default function HomePage() {
       tags: ['DSP', 'Python', 'Radar'],
       status: 'VERIFICATION PENDING',
     },
+    {
+      id: 'DK-DRDO-4109',
+      org: 'DRDO Cyber Defense Pod',
+      role: 'Quantum Key Distribution Network Protocol',
+      type: 'Defense Fellowship',
+      stipend: '₹48,000 / mo',
+      tags: ['Rust', 'QKD', 'Cryptography'],
+      status: 'ACTIVE SELECTION',
+    },
+    {
+      id: 'DK-INF-5520',
+      org: 'Infosys AI Research Labs',
+      role: 'Multimodal LLM Fine-Tuning for Indian Dialects',
+      type: 'Industry Research Docket',
+      stipend: '₹50,000 / mo',
+      tags: ['PyTorch', 'NLP', 'Transformers'],
+      status: 'LAB FORMATION',
+    },
+    {
+      id: 'DK-IITD-9214',
+      org: 'IIT Delhi x Siemens Energy',
+      role: 'Smart Grid Telemetry & Power Load Forecasting',
+      type: 'Joint Industrial Grant',
+      stipend: '₹2.20 Cr Grant',
+      tags: ['TimescaleDB', 'IoT', 'SCADA'],
+      status: 'VERIFICATION PENDING',
+    },
   ];
 
   return (
@@ -119,20 +146,20 @@ export default function HomePage() {
       {/* HERO SECTION (Swiss Typographic Grid)                           */}
       {/* =============================================================== */}
       <section className="border-b border-border-strong bg-bg-surface">
-        <div className="max-w-[1440px] mx-auto px-space-md lg:px-space-lg py-space-2xl md:py-space-4xl grid grid-cols-1 md:grid-cols-12 gap-space-lg items-start">
+        <div className="max-w-[1440px] mx-auto px-space-md lg:px-space-lg py-space-lg md:py-space-xl grid grid-cols-1 md:grid-cols-12 gap-space-lg items-start">
           <div className="md:col-span-8 flex flex-col items-start">
-            <div className="inline-flex items-center gap-space-xs border border-border-strong px-2.5 py-1 mb-space-md bg-bg-subtle">
+            <div className="inline-flex items-center gap-space-xs border border-border-strong px-2.5 py-1 mb-space-sm bg-bg-subtle">
               <span className="w-2 h-2 bg-accent-signal border border-border-strong" />
               <span className="font-label-mono text-label-mono uppercase tracking-wider text-fg-secondary">
                 SMART INDIA HACKATHON 2024 PROTOCOL // SIH-8042
               </span>
             </div>
 
-            <h1 className="text-display-hero font-display-hero text-fg-primary uppercase tracking-tight mb-space-md font-extrabold leading-none">
+            <h1 className="text-display-hero font-display-hero text-fg-primary uppercase tracking-tight mb-space-sm font-extrabold leading-none">
               BRIDGE THE GAP BETWEEN<br className="hidden sm:inline" /> SKILLS &amp; INDUSTRY.
             </h1>
 
-            <p className="text-body-lg font-body-lg text-fg-muted max-w-2xl mb-space-xl">
+            <p className="text-body-lg font-body-lg text-fg-muted max-w-2xl mb-space-lg">
               One unified typographic platform connecting students, academicians, institutions, and industry through mathematically verified skills, transparent research dockets, and industrial collaboration opportunities.
             </p>
 
@@ -223,7 +250,7 @@ export default function HomePage() {
       {/* =============================================================== */}
       {/* ECOSYSTEM FLOW ARCHITECTURE (Swiss Typographic Vector)          */}
       {/* =============================================================== */}
-      <section className="max-w-[1440px] mx-auto px-space-md lg:px-space-lg py-space-3xl w-full">
+      <section className="max-w-[1440px] mx-auto px-space-md lg:px-space-lg py-space-xl md:py-space-2xl w-full">
         <div className="mb-space-lg">
           <span className="font-label-mono text-label-mono uppercase text-fg-muted">// SECTION 02: STRUCTURAL SCHEMA</span>
           <h2 className="text-headline-lg font-headline-lg uppercase tracking-tight text-fg-primary">
@@ -290,9 +317,9 @@ export default function HomePage() {
       {/* =============================================================== */}
       {/* ACTIVE INDUSTRIAL REQUISITIONS & R&D DOCKETS                    */}
       {/* =============================================================== */}
-      <section className="border-t border-border-strong bg-bg-subtle/30 py-space-3xl">
-        <div className="max-w-[1440px] mx-auto px-space-md lg:px-space-lg">
-          <div className="flex flex-col md:flex-row md:items-end justify-between mb-space-xl gap-4">
+      <section className="border-t border-border-strong bg-bg-subtle/30 py-space-xl md:py-space-2xl overflow-hidden">
+        <div className="max-w-[1440px] mx-auto px-space-md lg:px-space-lg mb-space-lg">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div>
               <span className="font-label-mono text-label-mono uppercase text-fg-muted">// SECTION 03: LIVE LEDGER</span>
               <h2 className="text-headline-lg font-headline-lg uppercase tracking-tight text-fg-primary">
@@ -310,12 +337,15 @@ export default function HomePage() {
               <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
             </Link>
           </div>
+        </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-space-lg">
-            {recentDockets.map((docket) => (
+        {/* Continuous Horizontal Right-to-Left Ticker Ribbon */}
+        <div className="w-full overflow-hidden relative">
+          <div className="animate-marquee-continuous flex items-stretch gap-space-lg py-2 px-space-md">
+            {[...recentDockets, ...recentDockets].map((docket, index) => (
               <div
-                key={docket.id}
-                className="bg-bg-surface border border-border-strong p-space-lg flex flex-col justify-between hover:border-fg-primary transition-all group"
+                key={`${docket.id}-${index}`}
+                className="w-[340px] md:w-[380px] shrink-0 bg-bg-surface border border-border-strong p-space-lg flex flex-col justify-between hover:border-fg-primary transition-all shadow-[2px_2px_0px_0px_#18181B] group"
               >
                 <div>
                   <div className="flex items-center justify-between border-b border-border-hairline pb-space-xs mb-space-sm font-label-mono text-label-mono">
@@ -327,11 +357,11 @@ export default function HomePage() {
                   </div>
 
                   <span className="text-fg-muted text-xs font-mono block mb-1">{docket.org}</span>
-                  <h3 className="font-headline-sm text-body-lg font-bold text-fg-primary mb-2 group-hover:text-accent-signal transition-colors">
+                  <h3 className="font-headline-sm text-body-lg font-bold text-fg-primary mb-2 group-hover:text-accent-signal transition-colors line-clamp-2 min-h-[48px]">
                     {docket.role}
                   </h3>
                   <div className="flex items-baseline gap-2 mb-space-md">
-                    <span className="font-metric-tabular text-headline-sm text-fg-primary tnum">
+                    <span className="font-metric-tabular text-headline-sm text-fg-primary tnum font-bold">
                       {docket.stipend}
                     </span>
                     <span className="font-label-mono text-[10px] text-fg-muted uppercase">({docket.type})</span>
@@ -351,7 +381,7 @@ export default function HomePage() {
 
                 <Link
                   href="/login"
-                  className="w-full text-center py-2.5 bg-fg-primary text-bg-surface font-label-mono text-label-mono uppercase hover:bg-accent-signal hover:text-fg-primary transition-colors border border-border-strong"
+                  className="w-full text-center py-2.5 bg-fg-primary text-bg-surface font-label-mono text-label-mono uppercase hover:bg-accent-signal hover:text-fg-primary transition-colors border border-border-strong font-medium"
                 >
                   Inspect Docket &amp; Apply
                 </Link>

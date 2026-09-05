@@ -36,3 +36,23 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #FACC15;
 }
+
+/* Continuous Infinite Marquee */
+@keyframes marquee-scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee-continuous {
+  display: flex;
+  width: max-content;
+  animation: marquee-scroll 40s linear infinite;
+}
+
+.animate-marquee-continuous:hover {
+  animation-play-state: paused;
+}

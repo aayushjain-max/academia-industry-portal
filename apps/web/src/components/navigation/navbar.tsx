@@ -9,13 +9,7 @@ export const Navbar: React.FC = () => {
   const [searchOpen, setSearchOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const navItems = [
-    { label: 'Ecosystem', href: '/' },
-    { label: 'Student Node', href: '/student/dashboard' },
-    { label: 'Academician Node', href: '/academician/dashboard' },
-    { label: 'Industry Node', href: '/industry/dashboard' },
-    { label: 'Institution Node', href: '/institution/dashboard' },
-  ];
+  const isLandingPage = pathname === '/';
 
   return (
     <>
@@ -30,26 +24,6 @@ export const Navbar: React.FC = () => {
               <span className="w-3.5 h-3.5 bg-accent-signal inline-block border border-border-strong" />
               <span>SKILLBRIDGE // SIH-2024</span>
             </Link>
-
-            {/* Universal Navigation Links */}
-            <nav className="hidden lg:flex items-center h-full gap-space-md ml-space-md">
-              {navItems.map((item) => {
-                const isActive = item.href === '/' ? pathname === '/' : pathname.startsWith(item.href);
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={`h-full flex items-center px-space-xs transition-colors font-body-md ${
-                      isActive
-                        ? 'text-fg-primary border-b-2 border-accent-signal font-bold'
-                        : 'text-fg-muted hover:text-fg-primary'
-                    }`}
-                  >
-                    {item.label}
-                  </Link>
-                );
-              })}
-            </nav>
           </div>
 
           {/* Trailing Controls & Role Switcher Matrix */}
@@ -64,17 +38,19 @@ export const Navbar: React.FC = () => {
               <span className="material-symbols-outlined text-[20px]">search</span>
             </button>
 
-            <div className="relative">
-              <Link
-                href="/student/notifications"
-                className="p-2 text-fg-primary hover:bg-bg-subtle transition-colors duration-150 border border-transparent hover:border-border-strong relative flex items-center justify-center"
-                title="Notifications"
-                aria-label="Notifications"
-              >
-                <span className="material-symbols-outlined text-[20px]">notifications</span>
-                <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-accent-signal border border-border-strong" />
-              </Link>
-            </div>
+            {!isLandingPage && (
+              <div className="relative">
+                <Link
+                  href="/student/notifications"
+                  className="p-2 text-fg-primary hover:bg-bg-subtle transition-colors duration-150 border border-transparent hover:border-border-strong relative flex items-center justify-center"
+                  title="Notifications"
+                  aria-label="Notifications"
+                >
+                  <span className="material-symbols-outlined text-[20px]">notifications</span>
+                  <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-accent-signal border border-border-strong" />
+                </Link>
+              </div>
+            )}
 
             <Link
               href="/login"
@@ -87,7 +63,7 @@ export const Navbar: React.FC = () => {
             {/* Mobile Hamburger */}
             <button
               type="button"
-              className="lg:hidden p-2 text-fg-primary hover:bg-bg-subtle border border-border-strong"
+              className="md:hidden p-2 text-fg-primary hover:bg-bg-subtle border border-border-strong"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-label="Toggle Navigation Menu"
             >
@@ -100,17 +76,7 @@ export const Navbar: React.FC = () => {
 
         {/* Mobile Dropdown Menu */}
         {mobileMenuOpen && (
-          <div className="lg:hidden border-t border-border-strong bg-bg-surface px-space-md py-space-sm space-y-1">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setMobileMenuOpen(false)}
-                className="block py-2 text-fg-primary hover:bg-bg-subtle px-2 font-headline-sm uppercase text-sm border-b border-border-hairline last:border-0"
-              >
-                {item.label}
-              </Link>
-            ))}
+          <div className="md:hidden border-t border-border-strong bg-bg-surface px-space-md py-space-sm space-y-1">
             <div className="pt-2">
               <Link
                 href="/login"
