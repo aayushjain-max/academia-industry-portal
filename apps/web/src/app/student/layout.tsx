@@ -10,11 +10,14 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
 
   const links = [
     { label: 'Overview // Topology', href: '/student/dashboard', icon: 'dashboard' },
+    { label: 'Readiness Index (IRI)', href: '/student/readiness', icon: 'speed' },
+    { label: 'AI Advisor Terminal', href: '/student/assistant', icon: 'smart_toy' },
+    { label: 'Skill Assessments', href: '/student/assessment', icon: 'quiz' },
     { label: 'Skill Gap Telemetry', href: '/student/skill-gaps', icon: 'tune' },
-    { label: 'Applications (08)', href: '/student/applications', icon: 'work_history' },
-    { label: 'Curriculum Tracks', href: '/student/learning/courses', icon: 'menu_book' },
-    { label: 'Skill Passport Ledger', href: '/student/skill-passport', icon: 'token' },
-    { label: 'Opportunity Matches', href: '/student/opportunities/jobs', icon: 'travel_explore' },
+    { label: 'Portfolio Ledger', href: '/student/portfolio', icon: 'person_pin' },
+    { label: 'Opportunity Matches', href: '/student/opportunities', icon: 'travel_explore' },
+    { label: 'Applications', href: '/student/applications', icon: 'work_history' },
+    { label: 'Skill Passport', href: '/student/skill-passport', icon: 'token' },
   ];
 
   return (
@@ -44,7 +47,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
             {/* Navigation Links */}
             <nav className="space-y-1 font-mono text-xs">
               {links.map((link) => {
-                const isActive = pathname === link.href;
+                const isActive = pathname === link.href || (link.href !== '/student/dashboard' && pathname?.startsWith(link.href));
                 return (
                   <Link
                     key={link.href}
@@ -88,4 +91,3 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
     </div>
   );
 }
-

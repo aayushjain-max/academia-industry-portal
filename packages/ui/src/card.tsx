@@ -98,34 +98,36 @@ export const TelemetryCard: React.FC<TelemetryCardProps> = ({
   ...props
 }) => {
   const deltaColors: Record<string, string> = {
-    success: 'text-status-success',
-    danger: 'text-status-danger',
-    warning: 'text-status-warning',
-    neutral: 'text-fg-muted',
+    success: 'text-status-success bg-green-50 border-green-200',
+    danger: 'text-status-danger bg-amber-50 border-amber-200',
+    warning: 'text-amber-700 bg-amber-50 border-amber-200',
+    neutral: 'text-fg-muted bg-bg-subtle border-border-hairline/30',
   };
 
   return (
     <div
       className={cn(
-        'bg-bg-surface border border-border-strong p-space-md flex flex-col justify-between h-36 select-none',
+        'bg-bg-surface border border-border-strong p-space-md flex flex-col justify-between min-h-[148px] select-none shadow-[2px_2px_0px_0px_rgba(24,24,27,0.06)] hover:border-border-strong transition-colors',
         className
       )}
       {...props}
     >
-      <div className="flex items-start justify-between">
-        <span className="font-label-mono text-label-mono uppercase text-fg-muted tracking-wider">{label}</span>
-        {icon && <div className="text-fg-muted">{icon}</div>}
+      <div className="flex items-start justify-between gap-2">
+        <span className="font-label-mono text-[11px] uppercase text-fg-muted tracking-wider font-semibold line-clamp-1">{label}</span>
+        {icon && <div className="text-fg-muted shrink-0">{icon}</div>}
       </div>
-      <div>
-        <div className="flex items-baseline gap-space-sm">
-          <span className="font-metric-tabular text-metric-tabular text-fg-primary tnum font-bold">{value}</span>
+      <div className="space-y-1.5 pt-2">
+        <div className="flex items-baseline justify-between gap-2 flex-wrap">
+          <span className="font-metric-tabular text-2xl lg:text-[24px] leading-none text-fg-primary tnum font-bold tracking-tight whitespace-nowrap overflow-hidden text-ellipsis">
+            {value}
+          </span>
           {delta && (
-            <span className={cn('font-label-mono text-label-mono font-bold uppercase', deltaColors[deltaType])}>
+            <span className={cn('font-label-mono text-[10px] px-1.5 py-0.5 border font-bold uppercase tracking-wide inline-flex items-center shrink-0 whitespace-nowrap', deltaColors[deltaType])}>
               {delta}
             </span>
           )}
         </div>
-        {subtext && <p className="font-body-sm text-body-sm text-fg-muted mt-0.5">{subtext}</p>}
+        {subtext && <p className="font-body-sm text-[11px] text-fg-muted leading-tight truncate">{subtext}</p>}
       </div>
     </div>
   );

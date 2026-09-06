@@ -1,9 +1,12 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 
 export default function SkillGapsPage() {
+  const [showEnrollModal, setShowEnrollModal] = useState(false);
+  const [enrolled, setEnrolled] = useState(false);
+
   return (
     <div className="space-y-space-xl">
       {/* Top Protocol Header */}
@@ -53,7 +56,8 @@ export default function SkillGapsPage() {
           <div className="flex flex-col sm:flex-row lg:flex-col gap-2 shrink-0">
             <button
               type="button"
-              className="px-space-md py-2.5 bg-accent-signal text-fg-primary font-label-mono text-label-mono uppercase font-bold hover:bg-accent-signal-hover transition-colors flex items-center justify-center gap-1.5 border border-border-strong"
+              onClick={() => setShowEnrollModal(true)}
+              className="px-space-md py-2.5 bg-accent-signal text-fg-primary font-label-mono text-label-mono uppercase font-bold hover:bg-accent-signal-hover transition-colors flex items-center justify-center gap-1.5 border border-border-strong shadow-[2px_2px_0px_0px_#FFFFFF]"
             >
               <span className="material-symbols-outlined text-[18px]">bolt</span>
               <span>EXPEDITE GAP RESOLUTION</span>
@@ -64,6 +68,85 @@ export default function SkillGapsPage() {
           </div>
         </div>
       </section>
+
+      {/* 1-Click Gap Remediation Modal */}
+      {showEnrollModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-bg-surface border-2 border-border-strong max-w-lg w-full p-space-lg shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-border-hairline pb-2">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 bg-accent-signal" />
+                <h3 className="font-headline-sm uppercase font-bold text-fg-primary">
+                  1-Click Gap Remediation Action Plan
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowEnrollModal(false)}
+                className="font-mono text-fg-muted hover:text-fg-primary text-sm font-bold"
+              >
+                [ESC]
+              </button>
+            </div>
+
+            <div className="space-y-3 text-body-sm font-body-sm text-fg-secondary">
+              <p>
+                Initiating automated pedagogical bridge for <strong className="text-fg-primary">Docker & Container Orchestration</strong>.
+              </p>
+              <div className="p-3 bg-bg-canvas border border-border-hairline space-y-2 font-mono text-xs">
+                <div className="flex justify-between">
+                  <span className="text-fg-muted">STEP 01:</span>
+                  <span className="text-status-success font-bold">Auto-Enroll in 3-Week Lab Pod</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-fg-muted">STEP 02:</span>
+                  <span className="text-fg-primary">Reserve Hands-on Assessment Slot</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-fg-muted">PROJECTED MATCH:</span>
+                  <span className="text-status-success font-bold">78.4% → 92.0%</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-border-hairline">
+              <button
+                type="button"
+                onClick={() => setShowEnrollModal(false)}
+                className="px-4 py-2 border border-border-strong text-fg-secondary font-label-mono text-xs uppercase hover:bg-bg-subtle"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setEnrolled(true);
+                  setShowEnrollModal(false);
+                }}
+                className="px-4 py-2 bg-accent-signal text-fg-primary border border-border-strong font-label-mono text-xs uppercase font-bold hover:bg-accent-signal-hover shadow-[2px_2px_0px_0px_#18181B]"
+              >
+                Confirm &amp; Launch Pod
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {enrolled && (
+        <div className="p-3 bg-status-success/10 border-2 border-status-success text-fg-primary font-mono text-xs flex items-center justify-between">
+          <span className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-status-success" />
+            Remediation track activated: Docker Pod schedule synchronized with your calendar.
+          </span>
+          <button
+            type="button"
+            onClick={() => setEnrolled(false)}
+            className="text-fg-muted hover:text-fg-primary uppercase font-bold"
+          >
+            DISMISS
+          </button>
+        </div>
+      )}
 
       {/* Active Curriculum Tracks: Bento Grid */}
       <section className="space-y-space-md">

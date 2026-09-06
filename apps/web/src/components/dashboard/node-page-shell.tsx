@@ -56,26 +56,26 @@ export const NodePageShell: React.FC<NodePageShellProps> = ({
       </div>
 
       {/* Hero Title & Command Action Bar */}
-      <div className="border border-border-strong bg-bg-surface p-space-md lg:p-space-lg">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md pb-space-sm border-b border-border-hairline">
-          <div>
+      <div className="border border-border-strong bg-bg-surface p-space-md lg:p-space-lg shadow-[2px_2px_0px_0px_rgba(24,24,27,0.04)]">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-space-md pb-space-md border-b border-border-hairline">
+          <div className="max-w-3xl">
             {category && (
-              <div className="flex items-center gap-2 mb-1">
-                <span className="w-2 h-2 bg-primary inline-block" />
-                <span className="font-label-mono text-label-mono tracking-widest uppercase text-fg-muted">
+              <div className="flex items-center gap-2 mb-1.5">
+                <span className="w-2 h-2 bg-primary inline-block shrink-0" />
+                <span className="font-label-mono text-[11px] tracking-widest uppercase text-fg-muted font-bold">
                   // {category}
                 </span>
               </div>
             )}
-            <h1 className="text-headline-lg font-headline-lg uppercase tracking-tight text-fg-primary font-extrabold leading-tight">
+            <h1 className="text-2xl sm:text-3xl lg:text-[34px] font-headline-lg uppercase tracking-tight text-fg-primary font-black leading-tight">
               {title}
             </h1>
-            <p className="text-body-md font-body-md text-fg-muted max-w-4xl mt-1">
+            <p className="text-body-sm sm:text-body-md text-fg-muted mt-1.5 leading-relaxed">
               {description}
             </p>
           </div>
 
-          {actions && <div className="flex items-center gap-space-sm flex-wrap self-start lg:self-center">{actions}</div>}
+          {actions && <div className="flex items-center gap-2 flex-wrap shrink-0 self-start md:self-auto">{actions}</div>}
         </div>
 
         {/* 4 Telemetry KPIs */}

@@ -1,238 +1,212 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Badge, Button } from '@portal/ui';
-import { Play, Check, X, Clock, Terminal } from 'lucide-react';
+import Link from 'next/link';
+import { NodePageShell } from '@/components/dashboard/node-page-shell';
+import { Button, Badge, Card } from '@portal/ui';
+import { Icon } from '@/components/ui/icon';
+import { AssessmentTest, AssessmentCategory } from '@/types/student-features';
+
+const SAMPLE_TESTS: AssessmentTest[] = [
+  {
+    id: 'test-tech-01',
+    title: 'TypeScript & Next.js Architecture',
+    slug: 'typescript-nextjs',
+    category: 'technical',
+    description: 'Comprehensive evaluation of static typing, generics, React Server Components, server actions, and caching strategies.',
+    duration_minutes: 15,
+    total_questions: 10,
+    passing_score: 70,
+    skill_tags: ['TypeScript', 'Next.js / React', 'Web Architecture'],
+  },
+  {
+    id: 'test-tech-02',
+    title: 'PostgreSQL & Database Optimization',
+    slug: 'postgresql-optimization',
+    category: 'technical',
+    description: 'Relational data modeling, indexing strategies (B-Tree, GIN), RLS security policies, and query optimization.',
+    duration_minutes: 15,
+    total_questions: 10,
+    passing_score: 70,
+    skill_tags: ['PostgreSQL', 'SQL Optimization', 'Database Design'],
+  },
+  {
+    id: 'test-tech-03',
+    title: 'System Design & Distributed Scalability',
+    slug: 'system-design',
+    category: 'technical',
+    description: 'Microservices, message broker pipelines (Kafka/Redis), load balancing, and high-availability patterns.',
+    duration_minutes: 20,
+    total_questions: 10,
+    passing_score: 75,
+    skill_tags: ['System Architecture', 'Distributed Systems'],
+  },
+  {
+    id: 'test-soft-01',
+    title: 'Workplace Communication & Cross-Functional Sync',
+    slug: 'workplace-communication',
+    category: 'soft',
+    description: 'Asynchronous team collaboration, client negotiations, conflict resolution, and technical documentation.',
+    duration_minutes: 10,
+    total_questions: 8,
+    passing_score: 75,
+    skill_tags: ['Communication', 'Teamwork', 'Leadership'],
+  },
+  {
+    id: 'test-apt-01',
+    title: 'Algorithmic Problem Solving & Quantitative Logic',
+    slug: 'quantitative-logic',
+    category: 'aptitude',
+    description: 'Analytical reasoning, probability, data interpretation, and algorithmic complexity tradeoffs.',
+    duration_minutes: 15,
+    total_questions: 10,
+    passing_score: 80,
+    skill_tags: ['Analytical Thinking', 'Problem Solving', 'Data Interpretation'],
+  },
+];
 
 export default function StudentAssessmentPage() {
-  const [activeTab, setActiveTab] = useState<'problem' | 'submissions'>('problem');
-  const [selectedLanguage, setSelectedLanguage] = useState('Python 3.12');
-  const [code, setCode] = useState(`import asyncio
+  const [selectedCategory, setSelectedCategory] = useState<'all' | AssessmentCategory>('all');
+  const [search, setSearch] = useState('');
 
-async def handle_high_throughput_stream(batch_records: list[dict]) -> dict:
-    """
-    SIH-2024 Benchmark Task:
-    Process incoming sensor telemetry batches asynchronously.
-    Filter out corrupted frames (checksum mismatch) and compute moving average.
-    """
-    valid_records = []
-    for record in batch_records:
-        # Checksum validation
-        if record.get("checksum_valid", False):
-            valid_records.append(record["metric_val"])
-            
-    if not valid_records:
-        return {"processed": 0, "avg_telemetry": 0.0}
-        
-    avg = sum(valid_records) / len(valid_records)
-    return {
-        "processed": len(valid_records),
-        "avg_telemetry": round(avg, 2),
-        "status": "VALIDATED"
-    }
-`);
-
-  const [testResults, setTestResults] = useState<{ name: string; passed: boolean; latency: string }[] | null>(null);
-  const [running, setRunning] = useState(false);
-  const [submittedScore, setSubmittedScore] = useState<string | null>(null);
-
-  const handleRunTests = () => {
-    setRunning(true);
-    setTimeout(() => {
-      setTestResults([
-        { name: 'Test Case 1: Standard Batch Telemetry (50k records)', passed: true, latency: '12ms' },
-        { name: 'Test Case 2: Corrupted Frame Identification', passed: true, latency: '15ms' },
-        { name: 'Test Case 3: Zero-division Boundary Condition', passed: true, latency: '4ms' },
-        { name: 'Test Case 4: Concurrent Memory Spike Stress Test', passed: true, latency: '28ms' },
-      ]);
-      setRunning(false);
-    }, 1200);
-  };
-
-  const handleSubmitEvaluation = () => {
-    handleRunTests();
-    setTimeout(() => {
-      setSubmittedScore('98.4% SCORE // BENCHMARK EXCEEDED');
-    }, 1500);
-  };
+  const filteredTests = SAMPLE_TESTS.filter((t) => {
+    const matchesCategory = selectedCategory === 'all' || t.category === selectedCategory;
+    const matchesSearch =
+      t.title.toLowerCase().includes(search.toLowerCase()) ||
+      t.skill_tags.some((st) => st.toLowerCase().includes(search.toLowerCase()));
+    return matchesCategory && matchesSearch;
+  });
 
   return (
-    <div className="space-y-space-md">
-      {/* Top Telemetry Header */}
-      <div className="bg-bg-surface border-2 border-border-strong p-space-md flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-space-md">
-          <div className="w-10 h-10 bg-accent-signal text-fg-primary flex items-center justify-center font-bold text-base border border-border-strong shrink-0">
-            <Terminal size={20} />
-          </div>
-          <div>
-            <div className="flex items-center gap-2 font-label-mono text-[10px] text-fg-muted uppercase">
-              <span className="w-2 h-2 bg-status-success rounded-full" />
-              <span>PROCTORED TERMINAL // SESSION: EVAL-8042-PRO</span>
-              <span>•</span>
-              <span className="text-status-success font-semibold">CAMERA ACTIVE</span>
-            </div>
-            <h1 className="font-headline-md text-headline-sm uppercase font-extrabold text-fg-primary">
-              Distributed Systems Async Stream Assessment
-            </h1>
-          </div>
+    <NodePageShell
+      nodeId="STU-8042 // ASSESS-HUB"
+      nodeStatus="AICTE PROCTORED ENGINE"
+      category="VERIFIED SKILL ASSESSMENTS"
+      title="Skill Assessments"
+      description="Standardized technical, soft-skill, and aptitude examinations to benchmark your Industry Readiness Index."
+      actions={
+        <div className="flex items-center gap-space-xs">
+          <Link href="/student/assessment/history">
+            <Button variant="outline" size="sm">
+              <Icon name="history" size={14} className="mr-1" />
+              Assessment History (08)
+            </Button>
+          </Link>
+          <Link href="/student/readiness">
+            <Button variant="signal" size="sm">
+              <Icon name="speed" size={14} className="mr-1" />
+              View Readiness Score
+            </Button>
+          </Link>
+        </div>
+      }
+      kpis={[
+        { label: 'Completed Tests', value: '14 TESTS', delta: '13 PASSED', deltaType: 'success', subtext: 'Verified on Ledger', icon: 'task_alt' },
+        { label: 'Average Score', value: '8.4 / 10', delta: 'TOP 10%', deltaType: 'success', subtext: 'National Percentile', icon: 'military_tech' },
+        { label: 'Pending Retakes', value: '01 EXAM', delta: 'OPTIONAL', deltaType: 'neutral', subtext: 'System Design', icon: 'sync' },
+        { label: 'Ledger Signature', value: 'SHA-256', delta: 'SYNCED', deltaType: 'success', subtext: 'Immutable Credential', icon: 'token' },
+      ]}
+    >
+      {/* Category Filter & Search Ribbon */}
+      <div className="bg-bg-surface border border-border-strong p-space-md flex flex-col sm:flex-row items-center justify-between gap-space-md">
+        <div className="flex items-center gap-space-xs flex-wrap w-full sm:w-auto">
+          {[
+            { key: 'all', label: 'All Domains' },
+            { key: 'technical', label: 'Technical' },
+            { key: 'soft', label: 'Soft Skills' },
+            { key: 'aptitude', label: 'Aptitude & Logic' },
+          ].map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setSelectedCategory(tab.key as any)}
+              className={`px-3 py-1 font-label-mono text-xs uppercase border transition-colors ${
+                selectedCategory === tab.key
+                  ? 'bg-fg-primary text-bg-surface border-border-strong font-bold'
+                  : 'bg-bg-subtle text-fg-muted border-border-hairline hover:text-fg-primary'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
 
-        <div className="flex items-center gap-space-sm self-start md:self-auto font-mono text-xs">
-          <div className="px-3 py-1.5 bg-neutral-900 text-accent-signal border border-neutral-800 flex items-center gap-1.5 font-bold">
-            <Clock size={14} />
-            <span>44:18 REMAINING</span>
-          </div>
-          <Badge variant="signal">PROCTORED</Badge>
+        <div className="relative w-full sm:w-72">
+          <input
+            type="text"
+            placeholder="Search test or skill tag..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full h-9 px-3 pr-8 border border-border-strong bg-bg-canvas font-mono text-xs text-fg-primary focus:outline-none focus:ring-2 focus:ring-accent-signal"
+          />
+          <span className="material-symbols-outlined absolute right-2.5 top-2 text-fg-muted text-[18px]">
+            search
+          </span>
         </div>
       </div>
 
-      {submittedScore && (
-        <div className="p-space-md bg-green-50 border-2 border-status-success flex items-center justify-between animate-fade-in">
-          <div className="flex items-center gap-2 font-label-mono text-xs text-status-success font-bold">
-            <Check size={18} />
-            <span>EXAMINATION EVALUATED: {submittedScore}</span>
-          </div>
-          <span className="font-label-mono text-xs text-fg-primary font-bold">
-            CREDENTIAL MINTED TO SKILL PASSPORT
-          </span>
-        </div>
-      )}
-
-      {/* Main Assessment Split Screen */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-space-md items-start">
-        {/* Left 5 Cols: Problem Description & Constraints */}
-        <div className="lg:col-span-5 bg-bg-surface border border-border-strong p-space-md space-y-space-md">
-          <div className="border-b border-border-hairline pb-2 flex justify-between items-center">
-            <span className="font-label-mono text-xs text-fg-muted uppercase">
-              PROBLEM SPECIFICATION // PS-094
-            </span>
-            <span className="font-label-mono text-xs text-status-warning font-semibold">DIFFICULTY: HARD</span>
-          </div>
-
-          <div>
-            <h2 className="font-headline-sm text-body-lg font-bold text-fg-primary mb-2">
-              High-Throughput Async Telemetry Ingestion
-            </h2>
-            <p className="font-body-sm text-xs text-fg-secondary leading-relaxed">
-              Industrial sensors in automotive telemetry streams generate variable batches containing noisy corrupted frames. 
-              Implement an asynchronous pipeline handler to validate cryptographic checksums and compute rolling averages without blocking the main event loop.
-            </p>
-          </div>
-
-          <div className="space-y-2 font-mono text-xs">
-            <span className="font-label-mono text-fg-muted uppercase block text-[10px]">CONSTRAINTS:</span>
-            <ul className="list-disc pl-5 space-y-1 text-fg-secondary text-[11px]">
-              <li>Time Complexity: Must process 50,000 records in &lt; 50ms</li>
-              <li>Space Complexity: Zero auxiliary memory allocations over 10MB</li>
-              <li>Corrupted frames with <code className="bg-bg-subtle px-1">checksum_valid=False</code> must be dropped silently</li>
-            </ul>
-          </div>
-
-          <div className="p-3 bg-bg-subtle border border-border-hairline font-mono text-[11px] space-y-1">
-            <span className="text-fg-muted uppercase block text-[10px]">SAMPLE INPUT:</span>
-            <pre className="text-fg-primary overflow-x-auto text-[10px]">
-{`[
-  {"metric_val": 42.5, "checksum_valid": true},
-  {"metric_val": 99.0, "checksum_valid": false},
-  {"metric_val": 47.5, "checksum_valid": true}
-]`}
-            </pre>
-            <span className="text-fg-muted uppercase block text-[10px] pt-1">EXPECTED OUTPUT:</span>
-            <pre className="text-status-success text-[10px]">
-{`{"processed": 2, "avg_telemetry": 45.0, "status": "VALIDATED"}`}
-            </pre>
-          </div>
-        </div>
-
-        {/* Right 7 Cols: Interactive Code Editor & Test Runner */}
-        <div className="lg:col-span-7 space-y-space-md">
-          <div className="bg-neutral-950 border-2 border-border-strong text-white p-space-md">
-            {/* Editor Control Bar */}
-            <div className="flex items-center justify-between border-b border-neutral-800 pb-2 mb-3">
-              <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 bg-accent-signal inline-block" />
-                <span className="font-label-mono text-xs text-white font-bold uppercase">
-                  SANDBOX EXECUTION RUNNER
+      {/* Tests Catalog Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-space-md">
+        {filteredTests.map((test) => (
+          <Card key={test.id} className="hover:border-border-strong transition-colors flex flex-col justify-between">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between flex-wrap gap-2 font-label-mono text-xs">
+                <Badge
+                  variant={
+                    test.category === 'technical'
+                      ? 'signal'
+                      : test.category === 'soft'
+                      ? 'default'
+                      : 'outline'
+                  }
+                >
+                  {test.category.toUpperCase()}
+                </Badge>
+                <span className="text-fg-muted flex items-center gap-1 font-mono">
+                  <span className="material-symbols-outlined text-[14px]">timer</span>
+                  {test.duration_minutes} MINS
+                </span>
+                <span className="text-fg-muted font-mono">
+                  {test.total_questions} QUESTIONS
                 </span>
               </div>
-              <select
-                value={selectedLanguage}
-                onChange={(e) => setSelectedLanguage(e.target.value)}
-                className="bg-neutral-900 border border-neutral-700 text-accent-signal font-mono text-xs px-2 py-1 outline-none"
-              >
-                <option>Python 3.12</option>
-                <option>Golang 1.22</option>
-                <option>C++20 (GCC 14)</option>
-                <option>Rust 1.78</option>
-              </select>
-            </div>
 
-            {/* Code Input Area */}
-            <textarea
-              rows={13}
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              className="w-full bg-neutral-900 border border-neutral-800 p-3 font-mono text-xs text-neutral-200 focus:outline-none focus:border-accent-signal resize-none leading-relaxed"
-              spellCheck={false}
-            />
+              <div>
+                <h3 className="font-headline-sm font-bold text-fg-primary uppercase">
+                  {test.title}
+                </h3>
+                <p className="font-body-sm text-fg-muted mt-1">
+                  {test.description}
+                </p>
+              </div>
 
-            {/* Action Buttons */}
-            <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-neutral-800">
-              <div className="text-[10px] font-mono text-neutral-400">
-                CONTAINER: SANDBOX-LINUX-SANDBOX-04 // MEM: 64MB
-              </div>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={running}
-                  onClick={handleRunTests}
-                  className="text-white border-neutral-700 hover:bg-neutral-800 font-label-mono text-xs"
-                >
-                  <Play size={14} className="mr-1" />
-                  <span>{running ? 'Executing...' : 'Run Test Cases'}</span>
-                </Button>
-                <Button
-                  variant="signal"
-                  size="sm"
-                  disabled={running}
-                  onClick={handleSubmitEvaluation}
-                  className="font-label-mono text-xs font-bold"
-                >
-                  <Check size={14} className="mr-1" />
-                  <span>Submit Solution</span>
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          {/* Test Case Execution Output Terminal */}
-          {testResults && (
-            <div className="bg-bg-surface border-2 border-border-strong p-space-md space-y-2 animate-fade-in font-mono text-xs">
-              <div className="flex items-center justify-between border-b border-border-hairline pb-2">
-                <span className="font-label-mono text-xs font-bold uppercase text-fg-primary">
-                  TEST SUITE DIAGNOSTIC RESULTS
-                </span>
-                <span className="text-status-success font-bold">4 / 4 PASSED</span>
-              </div>
-              <div className="space-y-1.5">
-                {testResults.map((t, idx) => (
-                  <div
-                    key={idx}
-                    className="p-2 border border-border-hairline bg-bg-canvas flex items-center justify-between"
+              {/* Skill Tags */}
+              <div className="flex flex-wrap gap-1 pt-1">
+                {test.skill_tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="font-label-mono text-[10px] bg-bg-subtle border border-border-hairline px-1.5 py-0.5 text-fg-secondary"
                   >
-                    <div className="flex items-center gap-2">
-                      <span className="text-status-success">✓</span>
-                      <span className="text-fg-primary">{t.name}</span>
-                    </div>
-                    <span className="text-fg-muted font-label-mono text-[10px]">{t.latency}</span>
-                  </div>
+                    #{tag}
+                  </span>
                 ))}
               </div>
             </div>
-          )}
-        </div>
+
+            <div className="pt-4 mt-4 border-t border-border-hairline flex items-center justify-between">
+              <div className="font-label-mono text-xs text-fg-muted">
+                PASSING: <strong className="text-fg-primary">{test.passing_score}%</strong>
+              </div>
+
+              <Link href={`/student/assessment/${test.id}`}>
+                <Button variant="signal" size="sm">
+                  <Icon name="play_arrow" size={14} className="mr-1" />
+                  Launch Assessment
+                </Button>
+              </Link>
+            </div>
+          </Card>
+        ))}
       </div>
-    </div>
+    </NodePageShell>
   );
 }

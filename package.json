@@ -9,9 +9,15 @@
     "lint": "pnpm --filter \"*\" lint",
     "typecheck": "pnpm --filter \"*\" typecheck",
     "test": "pnpm --filter \"*\" test",
+    "test:e2e": "playwright test",
+    "audit:local": "playwright test",
+    "audit:prod": "playwright test",
+    "audit:report": "playwright show-report",
     "clean": "pnpm -r exec rm -rf node_modules .next dist build"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
+    "@playwright/test": "^1.63.0",
     "@types/node": "^20.11.0",
     "prettier": "^3.2.5",
     "typescript": "^5.4.0"

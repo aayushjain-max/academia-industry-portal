@@ -9,7 +9,17 @@ export const Navbar: React.FC = () => {
   const [searchOpen, setSearchOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const isLandingPage = pathname === '/';
+  const isMarketingPage =
+    pathname === '/' ||
+    pathname === '/ecosystem' ||
+    pathname === '/about' ||
+    pathname === '/contact' ||
+    pathname === '/how-it-works' ||
+    pathname === '/privacy' ||
+    pathname.startsWith('/login') ||
+    pathname.startsWith('/register') ||
+    pathname.startsWith('/forgot-password') ||
+    pathname.startsWith('/reset-password');
 
   return (
     <>
@@ -38,7 +48,7 @@ export const Navbar: React.FC = () => {
               <span className="material-symbols-outlined text-[20px]">search</span>
             </button>
 
-            {!isLandingPage && (
+            {!isMarketingPage && (
               <div className="relative">
                 <Link
                   href="/student/notifications"

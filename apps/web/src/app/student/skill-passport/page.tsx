@@ -123,6 +123,18 @@ export default function SkillPassportPage() {
             <span>{copied ? 'DID Copied!' : 'Copy DID String'}</span>
           </Button>
           <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setAuditNotice('Exporting high-resolution signed credential certificate (SHA-256 Stamp).');
+              setTimeout(() => setAuditNotice(null), 3500);
+            }}
+            className="font-label-mono text-xs"
+          >
+            <Icon name="download" size={14} className="mr-1.5" />
+            <span>Export Official PDF</span>
+          </Button>
+          <Button
             variant="signal"
             size="sm"
             onClick={() => handleAudit('ROOT_MERKLE_TREE_04')}
@@ -281,7 +293,31 @@ export default function SkillPassportPage() {
 
           {selectedCredential && (
             <div className="space-y-3 font-mono text-xs">
-              <div className="p-3 bg-bg-canvas border border-border-hairline space-y-1.5 max-h-60 overflow-y-auto">
+              {/* Visual Merkle Tree Path Verification */}
+              <div className="p-3 bg-bg-surface border border-border-strong space-y-2">
+                <span className="font-label-mono text-[10px] text-fg-muted uppercase block font-bold">
+                  // CRYPTOGRAPHIC MERKLE PATH VERIFICATION
+                </span>
+                <div className="flex items-center justify-between text-[11px] font-mono bg-bg-canvas p-2 border border-border-hairline">
+                  <span className="text-fg-secondary">ROOT: 0x88f2...10aa</span>
+                  <span className="text-status-success font-bold flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 bg-status-success rounded-full animate-ping" />
+                    ATTESTED
+                  </span>
+                </div>
+                <div className="pl-4 border-l-2 border-dashed border-border-strong space-y-1.5 text-[11px] font-mono">
+                  <div className="flex items-center justify-between text-fg-muted">
+                    <span>↳ BRANCH [0x29c...08]</span>
+                    <span className="text-status-success text-[10px]">✓ VALID</span>
+                  </div>
+                  <div className="flex items-center justify-between text-fg-primary font-bold">
+                    <span>↳ LEAF [{selectedCredential.merkleIndex}]</span>
+                    <span className="text-accent-signal text-[10px]">VERIFIED TARGET</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-3 bg-bg-canvas border border-border-hairline space-y-1.5 max-h-48 overflow-y-auto">
                 <div className="text-status-success">// W3C VERIFIABLE CREDENTIAL v2.0 DOCKET</div>
                 <div>{`{`}</div>
                 <div className="pl-4 text-fg-secondary">{`"@context": ["https://www.w3.org/2018/credentials/v1"],`}</div>

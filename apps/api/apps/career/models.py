@@ -3,11 +3,14 @@ from django.db import models
 from django.conf import settings
 
 class CareerPath(models.Model):
+    """
+    Standardized industry career pathways (e.g., Full Stack Engineer, AI/ML Specialist).
+    """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     title = models.CharField(max_length=200)
     description = models.TextField()
     industry = models.CharField(max_length=150, default='Technology & Software')
-    salary_range = models.JSONField(default=dict, blank=True) # {"min": 600000, "max": 1800000, "currency": "INR"}
+    salary_range = models.JSONField(default=dict, blank=True)  # {"min": 600000, "max": 1800000, "currency": "INR"}
     growth_projection = models.CharField(max_length=100, default='High (+22% YoY)')
     core_skills = models.JSONField(default=list, blank=True)
     recommended_steps = models.JSONField(default=list, blank=True)
@@ -18,16 +21,20 @@ class CareerPath(models.Model):
         ordering = ['title']
 
     def __str__(self):
-        return self.title
+        return f"{self.title} ({self.industry})"
+
 
 class CareerReadinessScore(models.Model):
+    """
+    Composite Industry Readiness Index (IRI) calculation snapshot.
+    """
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     student = models.OneToOneField(
         'students.StudentProfile',
         on_delete=models.CASCADE,
         related_name='readiness_score'
     )
-    overall_score = models.PositiveIntegerField(default=75) # 0 - 100
+    overall_score = models.PositiveIntegerField(default=75)
     technical_score = models.PositiveIntegerField(default=80)
     soft_skill_score = models.PositiveIntegerField(default=70)
     project_score = models.PositiveIntegerField(default=75)
@@ -42,7 +49,11 @@ class CareerReadinessScore(models.Model):
     def __str__(self):
         return f"Readiness: {self.student.user.email} ({self.overall_score}%)"
 
+
 class ActionPlan(models.Model):
+    """
+    Synthesized step-by-step milestone action plan to close identified skill gaps.
+    """
     PRIORITY_CHOICES = [
         ('HIGH', 'High'),
         ('MEDIUM', 'Medium'),
@@ -66,4 +77,3 @@ class ActionPlan(models.Model):
 
     def __str__(self):
         return f"ActionPlan: {self.student.user.email} -> {self.target_role}"
-
