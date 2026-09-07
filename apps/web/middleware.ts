@@ -26,7 +26,7 @@ export function middleware(request: NextRequest) {
   const token = request.cookies.get('access_token')?.value;
   const userRoleCookie = request.cookies.get('user_role')?.value;
   const tokenRole = extractRoleFromToken(token);
-  const activeRole = tokenRole || userRoleCookie;
+  const activeRole = (tokenRole || userRoleCookie || '').toUpperCase().trim();
   const { pathname } = request.nextUrl;
 
   const isAuthRoute =
@@ -44,19 +44,13 @@ export function middleware(request: NextRequest) {
 
   // If visiting auth route while authenticated, redirect to appropriate dashboard
   if (isAuthRoute && token && activeRole) {
-    const role = activeRole.toLowerCase();
-    const dashboardRoute =
-      role === 'student'
-        ? '/student/dashboard'
-        : role === 'industry'
-        ? '/industry/dashboard'
-        : role === 'institution'
-        ? '/institution/dashboard'
-        : role === 'academician'
-        ? '/academician/dashboard'
-        : role === 'admin'
-        ? '/admin/dashboard'
-        : '/';
+    let dashboardRoute = '/';
+    if (activeRole === 'STUDENT') dashboardRoute = '/student/dashboard';
+    else if (activeRole === 'INDUSTRY') dashboardRoute = '/industry/dashboard';
+    else if (activeRole === 'INSTITUTION_ADMIN' || activeRole === 'INSTITUTION') dashboardRoute = '/institution/dashboard';
+    else if (activeRole === 'ACADEMICIAN') dashboardRoute = '/academician/dashboard';
+    else if (activeRole === 'SUPER_ADMIN' || activeRole === 'ADMIN') dashboardRoute = '/admin/dashboard';
+    
     return NextResponse.redirect(new URL(dashboardRoute, request.url));
   }
 
@@ -69,20 +63,21 @@ export function middleware(request: NextRequest) {
 
   // Enforce role-specific prefixes
   if (isProtectedRoute && activeRole) {
-    const role = activeRole.toUpperCase();
-    if (pathname.startsWith('/student') && role !== 'STUDENT' && role !== 'ADMIN') {
+    const isSuperAdmin = activeRole === 'SUPER_ADMIN' || activeRole === 'ADMIN';
+
+    if (pathname.startsWith('/student') && activeRole !== 'STUDENT' && !isSuperAdmin) {
       return NextResponse.redirect(new URL('/unauthorized', request.url));
     }
-    if (pathname.startsWith('/industry') && role !== 'INDUSTRY' && role !== 'ADMIN') {
+    if (pathname.startsWith('/industry') && activeRole !== 'INDUSTRY' && !isSuperAdmin) {
       return NextResponse.redirect(new URL('/unauthorized', request.url));
     }
-    if (pathname.startsWith('/institution') && role !== 'INSTITUTION' && role !== 'ADMIN') {
+    if (pathname.startsWith('/institution') && activeRole !== 'INSTITUTION_ADMIN' && activeRole !== 'INSTITUTION' && !isSuperAdmin) {
       return NextResponse.redirect(new URL('/unauthorized', request.url));
     }
-    if (pathname.startsWith('/academician') && role !== 'ACADEMICIAN' && role !== 'ADMIN') {
+    if (pathname.startsWith('/academician') && activeRole !== 'ACADEMICIAN' && !isSuperAdmin) {
       return NextResponse.redirect(new URL('/unauthorized', request.url));
     }
-    if (pathname.startsWith('/admin') && role !== 'ADMIN') {
+    if (pathname.startsWith('/admin') && !isSuperAdmin) {
       return NextResponse.redirect(new URL('/unauthorized', request.url));
     }
   }
@@ -93,4 +88,3 @@ export function middleware(request: NextRequest) {
 export const config = {
   matcher: ['/((?!_next/static|_next/image|favicon.ico|public|api).*)'],
 };
-

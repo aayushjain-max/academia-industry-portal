@@ -1,5 +1,12 @@
-from django.test import TestCase
+import unittest
+from apps.gamification.serializers import BadgeSerializer
 
-class GamificationTests(TestCase):
-    def test_sample(self):
-        self.assertTrue(True)
+class GamificationUnitTest(unittest.TestCase):
+    def test_badge_serializer_structure(self):
+        fields = BadgeSerializer.Meta.fields
+        self.assertIn('name', fields)
+        self.assertIn('category', fields)
+        self.assertIn('points_required', fields)
+
+if __name__ == '__main__':
+    unittest.main()

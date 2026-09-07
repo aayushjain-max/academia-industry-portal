@@ -1,22 +1,33 @@
-from rest_framework import viewsets, permissions, status
+from rest_framework import viewsets, permissions, status, exceptions
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import CareerPath, CareerReadinessScore, ActionPlan
 from .serializers import CareerPathSerializer, CareerReadinessScoreSerializer, ActionPlanSerializer
 from apps.students.models import StudentProfile
 from apps.users.models import User
+from common.constants.roles import UserRole
 
 class CareerPathViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = CareerPath.objects.all()
     serializer_class = CareerPathSerializer
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAuthenticated]
 
 class CareerReadinessAPIView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, user_id=None):
-        target_user = request.user
-        if user_id:
+        requesting_user = request.user
+        target_user = requesting_user
+
+        # IDOR protection: if user_id is provided, ensure requesting user is authorized to inspect
+        if user_id and str(user_id) != str(requesting_user.id):
+            is_authorized = (
+                requesting_user.is_staff or
+                requesting_user.is_superuser or
+                requesting_user.role in [UserRole.SUPER_ADMIN, UserRole.INSTITUTION_ADMIN, UserRole.ACADEMICIAN]
+            )
+            if not is_authorized:
+                raise exceptions.PermissionDenied("You are not authorized to view another candidate's readiness score.")
             try:
                 target_user = User.objects.get(id=user_id)
             except (User.DoesNotExist, ValueError):
@@ -26,16 +37,46 @@ class CareerReadinessAPIView(APIView):
         if not student_profile:
             return Response({'error': 'Student profile not found.'}, status=status.HTTP_404_NOT_FOUND)
 
-        readiness, _ = CareerReadinessScore.objects.get_or_create(
+        # Calculate dynamic readiness metrics based on real candidate evidence
+        student_skills = getattr(student_profile, 'skills', None)
+        skill_count = student_skills.count() if student_skills is not None else 0
+        
+        # Evidence factors
+        assessments_count = getattr(student_profile, 'assessments', None)
+        ass_count = assessments_count.count() if assessments_count is not None else 0
+        
+        certs_count = getattr(student_profile, 'certifications', None)
+        cert_num = certs_count.count() if certs_count is not None else 0
+
+        projects_rel = getattr(student_profile, 'projects', None)
+        proj_num = projects_rel.count() if projects_rel is not None else 0
+
+        tech_score = min(98, max(30, 40 + (skill_count * 8)))
+        ass_score = min(98, max(25, 35 + (ass_count * 12)))
+        cert_score = min(98, max(20, 30 + (cert_num * 15)))
+        proj_score = min(98, max(20, 35 + (proj_num * 15)))
+        soft_score = 75
+        exp_score = min(95, max(20, 30 + (proj_num * 10)))
+
+        overall = int(
+            (tech_score * 0.30) +
+            (ass_score * 0.20) +
+            (proj_score * 0.15) +
+            (exp_score * 0.15) +
+            (cert_score * 0.10) +
+            (soft_score * 0.10)
+        )
+
+        readiness, _ = CareerReadinessScore.objects.update_or_create(
             student=student_profile,
             defaults={
-                'overall_score': 82,
-                'technical_score': 85,
-                'soft_skill_score': 76,
-                'project_score': 80,
-                'certification_score': 85,
-                'experience_score': 70,
-                'explanation': "Strong proficiency across core full-stack technologies and active project participation."
+                'overall_score': overall,
+                'technical_score': tech_score,
+                'soft_skill_score': soft_score,
+                'project_score': proj_score,
+                'certification_score': cert_score,
+                'experience_score': exp_score,
+                'explanation': f"Evaluated based on {skill_count} documented skills, {proj_num} live projects, {cert_num} certifications, and verified assessment benchmarks."
             }
         )
         serializer = CareerReadinessScoreSerializer(readiness)
@@ -45,8 +86,17 @@ class ActionPlanAPIView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, user_id=None):
-        target_user = request.user
-        if user_id:
+        requesting_user = request.user
+        target_user = requesting_user
+
+        if user_id and str(user_id) != str(requesting_user.id):
+            is_authorized = (
+                requesting_user.is_staff or
+                requesting_user.is_superuser or
+                requesting_user.role in [UserRole.SUPER_ADMIN, UserRole.INSTITUTION_ADMIN, UserRole.ACADEMICIAN]
+            )
+            if not is_authorized:
+                raise exceptions.PermissionDenied("You are not authorized to view another candidate's action plan.")
             try:
                 target_user = User.objects.get(id=user_id)
             except (User.DoesNotExist, ValueError):
@@ -60,30 +110,30 @@ class ActionPlanAPIView(APIView):
         if not action_plan:
             action_plan = ActionPlan.objects.create(
                 student=student_profile,
-                target_role="Full Stack Python Developer",
-                skill_gap="Cloud Deployment, Microservices Architecture",
+                target_role="Full Stack Engineer",
+                skill_gap="Cloud Infrastructure, Microservices Architecture",
                 priority="HIGH",
                 steps=[
                     {
                         "id": "step-1",
-                        "title": "Complete Docker Containerization Course",
-                        "description": "Learn multi-stage builds and Docker Compose orchestration.",
-                        "status": "COMPLETED",
-                        "resourceLink": "https://portal.internal/learning/docker-basics"
+                        "title": "Complete Containerization & Docker Essentials",
+                        "description": "Master multi-stage container builds and production deployment.",
+                        "status": "IN_PROGRESS",
+                        "resourceLink": "/student/learning"
                     },
                     {
                         "id": "step-2",
-                        "title": "Build a Microservice with FastAPI",
-                        "description": "Implement async endpoints with Redis caching.",
-                        "status": "IN_PROGRESS",
-                        "resourceLink": "https://portal.internal/projects/fastapi-redis"
+                        "title": "Build Distributed API Microservice",
+                        "description": "Implement asynchronous queues and Redis caching layer.",
+                        "status": "NOT_STARTED",
+                        "resourceLink": "/student/projects"
                     },
                     {
                         "id": "step-3",
-                        "title": "Take Cloud & DevOps Skill Assessment",
-                        "description": "Attain 80%+ to verify credentials on Digital Skill Passport.",
+                        "title": "Take Backend Architecture Diagnostic Assessment",
+                        "description": "Achieve 80%+ benchmark to earn verified skill passport stamp.",
                         "status": "NOT_STARTED",
-                        "resourceLink": "https://portal.internal/assessments/devops-level-1"
+                        "resourceLink": "/student/assessments"
                     }
                 ]
             )
@@ -95,27 +145,27 @@ class CareerAssistantAPIView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
-        query = request.data.get('query', '')
+        query = request.data.get('query', '').strip()
         if not query:
             return Response({'error': 'Query is required.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Context-aware AI response based on student role and skills
+        # Context-aware structured response
         user = request.user
-        role_info = f"student ({user.student_profile.degree})" if hasattr(user, 'student_profile') else user.role
-
+        degree = getattr(getattr(user, 'student_profile', None), 'degree', 'Engineering')
+        
         advice = (
-            f"Based on your profile as a {role_info}, focus on strengthening your containerization (Docker) and "
-            f"distributed systems knowledge. Recruiters for Full Stack and Backend roles look for hands-on projects "
-            f"demonstrating RESTful API design, database indexing, and asynchronous workers."
+            f"Based on your profile in {degree}, targeting industry placements requires demonstrable hands-on "
+            f"project experience with cloud deployments, REST/GraphQL interfaces, and database optimization. "
+            f"Regarding your query ('{query}'): prioritize completing your pending skill assessments and contributing "
+            f"to live projects to elevate your verifiable skill passport tier."
         )
 
         return Response({
             'query': query,
             'response': advice,
             'suggested_actions': [
-                "Enroll in 'Production Django & FastAPI Architecture'",
-                "Take the Technical Assessment for Backend Engineering",
-                "Apply to 3 matching Micro-Internships"
+                "Run Diagnostic Skill Assessment",
+                "Explore Matching Live Projects",
+                "Export Cryptographic Skill Passport"
             ]
         }, status=status.HTTP_200_OK)
-

@@ -52,3 +52,7 @@ redis_data/
 # Test output
 playwright-report/
 test-results/
+
+# Archives
+*.zip
+*.tar.gz

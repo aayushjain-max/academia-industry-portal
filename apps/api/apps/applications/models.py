@@ -5,8 +5,10 @@ class ApplicationStatus(models.TextChoices):
     APPLIED = 'APPLIED', 'Applied'
     UNDER_REVIEW = 'UNDER_REVIEW', 'Under Review'
     SHORTLISTED = 'SHORTLISTED', 'Shortlisted'
+    INTERVIEW = 'INTERVIEW', 'Interview Scheduled'
     ACCEPTED = 'ACCEPTED', 'Accepted'
     REJECTED = 'REJECTED', 'Rejected'
+    WITHDRAWN = 'WITHDRAWN', 'Withdrawn'
 
 class Application(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -25,4 +27,3 @@ class Application(models.Model):
 
     def __str__(self):
         return f"{self.student.user.email} -> {self.opportunity.title} ({self.status})"
-

@@ -1,6 +1,5 @@
 from rest_framework import serializers
 from .models import Application
-from apps.opportunities.serializers import OpportunitySerializer
 
 class ApplicationSerializer(serializers.ModelSerializer):
     student_name = serializers.CharField(source='student.user.get_full_name', read_only=True)
@@ -18,5 +17,5 @@ class ApplicationSerializer(serializers.ModelSerializer):
             'cover_letter', 'resume_url', 'feedback',
             'applied_at', 'updated_at'
         ]
-        read_only_fields = ['id', 'student', 'applied_at', 'updated_at']
-
+        # Enforce server-controlled status: status cannot be manipulated directly via normal POST/PUT/PATCH
+        read_only_fields = ['id', 'student', 'status', 'applied_at', 'updated_at']

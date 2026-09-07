@@ -1,14 +1,13 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from app.schemas.requests import AssessmentSubmission
+from app.pipelines.profiling_pipeline import ProfilingPipeline
 
 router = APIRouter()
+pipeline = ProfilingPipeline()
 
 @router.post("/profile")
 async def generate_skill_profile(data: AssessmentSubmission):
-    return {
-        "user_id": data.user_id,
-        "skills": [
-            {"skill": "Python", "score": 85, "category": "TECHNICAL"},
-            {"skill": "Communication", "score": 75, "category": "SOFT"}
-        ]
-    }
+    try:
+        return pipeline.run(data)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed to generate skill profile: {str(e)}")

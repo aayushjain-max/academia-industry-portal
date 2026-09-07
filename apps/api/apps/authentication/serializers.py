@@ -4,10 +4,9 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from apps.users.models import User
 from apps.students.models import StudentProfile
 from apps.industries.models import IndustryProfile
-from common.constants.roles import UserRole
-
 from apps.academicians.models import AcademicianProfile
 from apps.institutions.models import InstitutionProfile
+from common.constants.roles import UserRole
 
 class StudentProfileSummarySerializer(serializers.ModelSerializer):
     class Meta:
@@ -43,6 +42,8 @@ class UserDetailSerializer(serializers.ModelSerializer):
             'student_profile', 'industry_profile', 'academician_profile', 'institution_profile',
             'created_at'
         ]
+        # Prevent privilege escalation: role, email verification, and id cannot be mutated via profile update
+        read_only_fields = ['id', 'email', 'role', 'is_email_verified', 'created_at']
 
 class RegisterSerializer(serializers.Serializer):
     email = serializers.EmailField()
@@ -50,7 +51,15 @@ class RegisterSerializer(serializers.Serializer):
     first_name = serializers.CharField(max_length=150, required=False, default='')
     last_name = serializers.CharField(max_length=150, required=False, default='')
     phone = serializers.CharField(max_length=20, required=False, default='')
-    role = serializers.ChoiceField(choices=UserRole.choices, default=UserRole.STUDENT)
+    role = serializers.ChoiceField(
+        choices=[
+            (UserRole.STUDENT, 'Student'),
+            (UserRole.INDUSTRY, 'Industry Representative'),
+            (UserRole.ACADEMICIAN, 'Academician / Faculty'),
+            (UserRole.INSTITUTION_ADMIN, 'Institution Administrator'),
+        ],
+        default=UserRole.STUDENT
+    )
     preferred_language = serializers.CharField(max_length=10, required=False, default='en')
     
     # Optional profile fields during registration
@@ -64,6 +73,12 @@ class RegisterSerializer(serializers.Serializer):
         if User.objects.filter(email=value.lower()).exists():
             raise serializers.ValidationError("A user with this email address already exists.")
         return value.lower()
+
+    def validate_role(self, value):
+        # Disallow privilege escalation / self-registration as SUPER_ADMIN
+        if value == UserRole.SUPER_ADMIN:
+            raise serializers.ValidationError("Direct registration as Super Administrator is forbidden.")
+        return value
 
     def create(self, validated_data):
         institution_name = validated_data.pop('institution_name', '')
@@ -106,7 +121,6 @@ class RegisterSerializer(serializers.Serializer):
 
         return user
 
-
 class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True)
@@ -127,4 +141,3 @@ class LoginSerializer(serializers.Serializer):
             'access': str(refresh.access_token),
             'refresh': str(refresh),
         }
-
