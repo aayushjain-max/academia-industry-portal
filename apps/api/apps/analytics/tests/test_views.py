@@ -9,8 +9,9 @@ class MockUser:
         self.is_staff = is_staff
 
 class MockRequest:
-    def __init__(self, user):
+    def __init__(self, user, method='GET'):
         self.user = user
+        self.method = method
 
 class AnalyticsPermissionUnitTest(unittest.TestCase):
     def test_student_cannot_access_institution_analytics(self):

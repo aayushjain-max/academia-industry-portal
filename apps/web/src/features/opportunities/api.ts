@@ -22,7 +22,8 @@ export interface OpportunityItem {
 
 export const listOpportunities = async (params?: Record<string, string>): Promise<OpportunityItem[]> => {
   const qs = params ? '?' + new URLSearchParams(params).toString() : '';
-  return apiClient.get<OpportunityItem[]>(`/opportunities/${qs}`);
+  const res: any = await apiClient.get<any>(`/opportunities/${qs}`);
+  return Array.isArray(res) ? res : res?.results || [];
 };
 
 export const getOpportunityById = async (id: string): Promise<OpportunityItem> => {
@@ -43,5 +44,32 @@ export const deleteOpportunity = async (id: string): Promise<void> => {
 
 export const matchOpportunityWithProfile = async (opportunityId: string) => {
   return apiClient.get(`/opportunities/${opportunityId}/match/`);
+};
+
+export type Opportunity = OpportunityItem & {
+  company_name?: string;
+  stipend_amount?: number;
+  duration_weeks?: number;
+  is_active?: boolean;
+};
+
+export const opportunitiesApi = {
+  getOpportunities: async (params?: Record<string, string>): Promise<{ results: Opportunity[]; count: number }> => {
+    const qs = params ? '?' + new URLSearchParams(params).toString() : '';
+    const res: any = await apiClient.get<any>(`/opportunities/${qs}`);
+    if (Array.isArray(res)) {
+      return { results: res as Opportunity[], count: res.length };
+    }
+    return {
+      results: (res?.results || []) as Opportunity[],
+      count: res?.count ?? (res?.results?.length || 0),
+    };
+  },
+  listOpportunities,
+  getOpportunityById,
+  createOpportunity,
+  updateOpportunity,
+  deleteOpportunity,
+  matchOpportunityWithProfile,
 };
 

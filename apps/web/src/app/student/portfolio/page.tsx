@@ -50,7 +50,7 @@ export default function StudentPortfolioManagementPage() {
             PUBLIC RECRUITER DOSSIER URL
           </span>
           <div className="font-mono text-xs font-bold text-fg-primary bg-bg-canvas px-3 py-1.5 border border-border-hairline flex items-center gap-2">
-            <span className="material-symbols-outlined text-accent-signal text-[16px]">public</span>
+            <span className="material-symbols-outlined text-portal-primary text-[16px]">public</span>
             <span>/portfolio/aarav-sharma</span>
           </div>
         </div>

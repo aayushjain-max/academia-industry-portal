@@ -6,6 +6,7 @@ import { NodePageShell } from '@/components/dashboard/node-page-shell';
 import { Button, Badge, Card } from '@portal/ui';
 import { Icon } from '@/components/ui/icon';
 import { AdvisorMessage, AdvisorSessionData } from '@/types/student-features';
+import { useAuthStore } from '@/store/authStore';
 
 const INITIAL_SUGGESTIONS = [
   {
@@ -30,54 +31,86 @@ const INITIAL_SUGGESTIONS = [
   },
 ];
 
-const INITIAL_SESSION: AdvisorSessionData = {
-  daily_count: 3,
-  daily_limit: 30,
-  remaining: 27,
-  student_context: {
-    name: 'Aarav Sharma',
-    institution: 'IIT Bombay',
-    level: 'LVL 12 Candidate',
-    readiness_index: 74,
-    top_skills: ['TypeScript', 'Next.js', 'PostgreSQL', 'Python', 'Tailwind CSS'],
-  },
-  messages: [
-    {
-      id: 'msg-01',
-      role: 'system',
-      content: 'AI Career Advisor initialized. Context synchronized with student passport data (Readiness: 74% // Target: Full Stack Engineer).',
-      timestamp: '10:00 AM',
-    },
-    {
-      id: 'msg-02',
-      role: 'assistant',
-      content: `Greetings Aarav. I have analyzed your candidate telemetry. 
-Your **Industry Readiness Index (IRI)** is currently **74% (Industry-Ready Tier)**.
-
-**Key telemetry highlights:**
-- **Strengths:** Strong TypeScript & Next.js verified test scores (8.8/10).
-- **Primary Bottleneck:** Distributed Systems & Redis Caching tests are currently unverified (Gap: ~3.2pt).
-
-How can I assist your career roadmap today? You can select a quick prompt below or type your inquiry.`,
-      timestamp: '10:01 AM',
-      suggested_actions: [
-        { label: 'View Skill Gaps // Telemetry', href: '/student/readiness' },
-        { label: 'Take Diagnostic Assessment', href: '/student/assessment' },
-      ],
-    },
-  ],
-};
+import { aiClient } from '@/lib/api/client';
 
 export default function StudentAssistantPage() {
-  const [messages, setMessages] = useState<AdvisorMessage[]>(INITIAL_SESSION.messages);
+  const [studentContext, setStudentContext] = useState({
+    name: 'Candidate',
+    institution: 'Accredited Institution',
+    level: 'Verified Node',
+    readiness_index: 75,
+    top_skills: ['Python', 'TypeScript', 'SQL', 'System Architecture'],
+  });
+
+  const [messages, setMessages] = useState<AdvisorMessage[]>([]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [quota, setQuota] = useState({
-    remaining: INITIAL_SESSION.remaining,
-    daily_limit: INITIAL_SESSION.daily_limit,
+    remaining: 30,
+    daily_limit: 30,
   });
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const rawUser = localStorage.getItem('user');
+        if (rawUser) {
+          const u = JSON.parse(rawUser);
+          const fullName = `${u.first_name || ''} ${u.last_name || ''}`.trim() || 'Candidate';
+          const ctx = {
+            name: fullName,
+            institution: u.institution_name || 'Accredited Institution',
+            level: 'Verified Node',
+            readiness_index: 75,
+            top_skills: u.skills || ['Python', 'TypeScript', 'SQL', 'System Architecture'],
+          };
+          setStudentContext(ctx);
+          setMessages([
+            {
+              id: 'msg-01',
+              role: 'system',
+              content: `AI Career Advisor initialized. Context synchronized with student passport data for ${fullName}.`,
+              timestamp: '10:00 AM',
+            },
+            {
+              id: 'msg-02',
+              role: 'assistant',
+              content: `Greetings ${fullName}. I have initialized your sovereign candidate telemetry session.\n\nHow can I assist your career roadmap today? You can select a curated diagnostic prompt on the left or enter your inquiry directly.`,
+              timestamp: '10:01 AM',
+              suggested_actions: [
+                { label: 'View Skill Gaps // Telemetry', href: '/student/readiness' },
+                { label: 'Take Diagnostic Assessment', href: '/student/assessment' },
+              ],
+            },
+          ]);
+          return;
+        }
+      } catch (e) {
+        // fallback to default
+      }
+    }
+
+    setMessages([
+      {
+        id: 'msg-01',
+        role: 'system',
+        content: 'AI Career Advisor initialized. Context synchronized with student passport data.',
+        timestamp: '10:00 AM',
+      },
+      {
+        id: 'msg-02',
+        role: 'assistant',
+        content: 'Greetings Candidate. I have initialized your sovereign candidate telemetry session.\n\nHow can I assist your career roadmap today? You can select a curated diagnostic prompt on the left or enter your inquiry directly.',
+        timestamp: '10:01 AM',
+        suggested_actions: [
+          { label: 'View Skill Gaps // Telemetry', href: '/student/readiness' },
+          { label: 'Take Diagnostic Assessment', href: '/student/assessment' },
+        ],
+      },
+    ]);
+  }, []);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -90,7 +123,7 @@ export default function StudentAssistantPage() {
     return `${hours}:${minutes}`;
   };
 
-  const handleSendMessage = (textToSend?: string) => {
+  const handleSendMessage = async (textToSend?: string) => {
     const prompt = (textToSend || input).trim();
     if (!prompt || isTyping || quota.remaining <= 0) return;
 
@@ -107,14 +140,27 @@ export default function StudentAssistantPage() {
     setQuota((prev) => ({ ...prev, remaining: Math.max(0, prev.remaining - 1) }));
 
     try {
-      // Simulated LLM reasoning & response with context awareness
-      setTimeout(() => {
-        try {
-          let responseContent = '';
-          let actions: Array<{ label: string; href: string }> = [];
+      let responseContent = '';
+      let actions: Array<{ label: string; href: string }> = [];
 
-          if (prompt.toLowerCase().includes('gap') || prompt.toLowerCase().includes('skill')) {
-            responseContent = `Based on current industry demand matrices for **Full Stack Engineer**:
+      try {
+        const currentUser = useAuthStore.getState().user;
+        const aiRes: any = await aiClient.post('/assistant/chat', {
+          message: prompt,
+          user_id: currentUser?.id || 'candidate-node',
+          context: studentContext,
+        });
+        if (aiRes && aiRes.response) {
+          responseContent = aiRes.response;
+          actions = aiRes.suggested_actions || [];
+        }
+      } catch (apiErr) {
+        console.warn('AI microservice fallback:', apiErr);
+      }
+
+      if (!responseContent) {
+        if (prompt.toLowerCase().includes('gap') || prompt.toLowerCase().includes('skill')) {
+          responseContent = `Based on current industry demand matrices for **Full Stack Engineer**:
 1. **Critical Gap:** Distributed Systems & Message Queues (Kafka/RabbitMQ) — Required: 7.5, Current: 3.5.
 2. **Moderate Gap:** Docker containerization & CI/CD deployment pipelines — Required: 8.0, Current: 6.0.
 3. **Verified Met:** TypeScript, React/Next.js, and SQL schema design are already exceeding the 80th percentile.
@@ -122,57 +168,54 @@ export default function StudentAssistantPage() {
 **Immediate Next Steps:**
 - Complete the 20-minute **System Design Diagnostic Test**.
 - Document an event-driven architecture in your project portfolio.`;
-            actions = [
-              { label: 'Launch System Design Test', href: '/student/assessment' },
-              { label: 'View Readiness Index', href: '/student/readiness' },
-            ];
-          } else if (prompt.toLowerCase().includes('roadmap') || prompt.toLowerCase().includes('week')) {
-            responseContent = `### 4-Week Accelerated Readiness Plan (Target: 85% IRI)
+          actions = [
+            { label: 'Launch System Design Test', href: '/student/assessment' },
+            { label: 'View Readiness Index', href: '/student/readiness' },
+          ];
+        } else if (prompt.toLowerCase().includes('roadmap') || prompt.toLowerCase().includes('week')) {
+          responseContent = `### 4-Week Accelerated Readiness Plan (Target: 85% IRI)
 
 - **Week 1 (Distributed Systems):** Master message broker patterns and publish-subscribe pipelines.
 - **Week 2 (Containerization):** Write multi-stage Dockerfiles and deploy sample services to Kubernetes.
 - **Week 3 (Assessments & Verification):** Complete verified technical assessments to lock in your credentials on the Skill Passport ledger.
 - **Week 4 (Capstone Alignment):** Deploy your public portfolio link directly to active internship listings.`;
-            actions = [
-              { label: 'Explore Curriculum Tracks', href: '/student/learning/courses' },
-              { label: 'Match Opportunities', href: '/student/opportunities' },
-            ];
-          } else {
-            responseContent = `I have logged your request: **"${prompt}"**.
+          actions = [
+            { label: 'Explore Curriculum Tracks', href: '/student/learning/courses' },
+            { label: 'Match Opportunities', href: '/student/opportunities' },
+          ];
+        } else {
+          responseContent = `I have logged your request: **"${prompt}"**.
 
 In accordance with AICTE & Industry Benchmark Guidelines:
 - Your verified skills profile has been referenced.
 - Recommendations are aligned with standard tier-01 placement criteria.
 
 Feel free to ask for interview drill simulations, code reviews, or tailored gap-closing exercises.`;
-            actions = [
-              { label: 'Explore Assessments', href: '/student/assessment' },
-              { label: 'Open Portfolio Builder', href: '/student/portfolio' },
-            ];
-          }
-
-          const assistantMessage: AdvisorMessage = {
-            id: `ast-${Date.now()}`,
-            role: 'assistant',
-            content: responseContent,
-            timestamp: getFormattedTime(),
-            suggested_actions: actions,
-          };
-
-          setMessages((prev) => [...prev, assistantMessage]);
-        } catch (err: any) {
-          const errorMessage: AdvisorMessage = {
-            id: `err-${Date.now()}`,
-            role: 'assistant',
-            content: 'Telemetry pipeline interruption. Please retry your inquiry or inspect telemetry network status.',
-            timestamp: getFormattedTime(),
-          };
-          setMessages((prev) => [...prev, errorMessage]);
-        } finally {
-          setIsTyping(false);
+          actions = [
+            { label: 'Explore Assessments', href: '/student/assessment' },
+            { label: 'Open Portfolio Builder', href: '/student/portfolio' },
+          ];
         }
-      }, 1000);
-    } catch (err) {
+      }
+
+      const assistantMessage: AdvisorMessage = {
+        id: `ast-${Date.now()}`,
+        role: 'assistant',
+        content: responseContent,
+        timestamp: getFormattedTime(),
+        suggested_actions: actions,
+      };
+
+      setMessages((prev) => [...prev, assistantMessage]);
+    } catch (err: any) {
+      const errorMessage: AdvisorMessage = {
+        id: `err-${Date.now()}`,
+        role: 'assistant',
+        content: 'Telemetry pipeline interruption. Please retry your inquiry or inspect telemetry network status.',
+        timestamp: getFormattedTime(),
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
       setIsTyping(false);
     }
   };
@@ -192,7 +235,22 @@ Feel free to ask for interview drill simulations, code reviews, or tailored gap-
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setMessages(INITIAL_SESSION.messages)}
+            onClick={() =>
+              setMessages([
+                {
+                  id: `msg-${Date.now()}-01`,
+                  role: 'system',
+                  content: `AI Career Advisor re-initialized for ${studentContext.name}.`,
+                  timestamp: getFormattedTime(),
+                },
+                {
+                  id: `msg-${Date.now()}-02`,
+                  role: 'assistant',
+                  content: `Session reset. How can I assist your career roadmap today, ${studentContext.name}?`,
+                  timestamp: getFormattedTime(),
+                },
+              ])
+            }
           >
             <Icon name="refresh" size={14} className="mr-1" />
             Reset Session
@@ -216,10 +274,10 @@ Feel free to ask for interview drill simulations, code reviews, or tailored gap-
             </span>
             <div>
               <h3 className="font-headline-sm font-bold text-fg-primary uppercase">
-                {INITIAL_SESSION.student_context.name}
+                {studentContext.name}
               </h3>
               <p className="font-label-mono text-xs text-fg-muted">
-                {INITIAL_SESSION.student_context.institution} // {INITIAL_SESSION.student_context.level}
+                {studentContext.institution} // {studentContext.level}
               </p>
             </div>
 
@@ -230,7 +288,7 @@ Feel free to ask for interview drill simulations, code reviews, or tailored gap-
               </div>
               <div className="flex justify-between">
                 <span className="text-fg-muted">READINESS:</span>
-                <span className="text-status-success font-bold">74% / 100</span>
+                <span className="text-status-success font-bold">{studentContext.readiness_index}% / 100</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-fg-muted">PASSPORT ID:</span>
@@ -243,7 +301,7 @@ Feel free to ask for interview drill simulations, code reviews, or tailored gap-
                 TOP VERIFIED SKILLS
               </span>
               <div className="flex flex-wrap gap-1">
-                {INITIAL_SESSION.student_context.top_skills.map((skill) => (
+                {studentContext.top_skills.map((skill) => (
                   <span
                     key={skill}
                     className="font-label-mono text-[10px] bg-bg-subtle border border-border-hairline px-1.5 py-0.5 text-fg-secondary"
@@ -268,7 +326,7 @@ Feel free to ask for interview drill simulations, code reviews, or tailored gap-
                   disabled={isTyping}
                   className="w-full text-left p-2 border border-border-hairline bg-bg-canvas hover:border-border-strong hover:bg-bg-subtle transition-colors text-xs font-label-mono flex items-start gap-2 text-fg-primary"
                 >
-                  <span className="material-symbols-outlined text-[16px] text-accent-signal mt-0.5">
+                  <span className="material-symbols-outlined text-[16px] text-portal-primary mt-0.5">
                     {item.icon}
                   </span>
                   <span>{item.label}</span>
@@ -337,7 +395,7 @@ Feel free to ask for interview drill simulations, code reviews, or tailored gap-
                           <Link
                             key={i}
                             href={act.href}
-                            className="inline-flex items-center gap-1 font-label-mono text-xs bg-accent-signal text-fg-primary px-2.5 py-1 font-bold border border-border-strong hover:bg-accent-signal-hover transition-colors"
+                            className="inline-flex items-center gap-1 font-label-mono text-xs bg-portal-primary text-portal-on-primary px-2.5 py-1 font-bold border border-border-strong hover:bg-portal-primary-hover transition-colors"
                           >
                             <span>{act.label}</span>
                             <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
@@ -380,7 +438,7 @@ Feel free to ask for interview drill simulations, code reviews, or tailored gap-
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   disabled={isTyping || quota.remaining <= 0}
-                  className="w-full h-11 px-3 border border-border-strong bg-bg-canvas font-mono text-xs text-fg-primary focus:outline-none focus:ring-2 focus:ring-accent-signal"
+                  className="w-full h-11 px-3 border border-border-strong bg-bg-canvas font-mono text-xs text-fg-primary focus:outline-none focus:ring-2 focus:ring-portal-primary"
                 />
               </div>
 

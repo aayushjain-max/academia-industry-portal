@@ -4,13 +4,24 @@ from rest_framework.response import Response
 from .models import SkillPassport
 from .serializers import SkillPassportSerializer
 from apps.skills.models import StudentSkill
+from common.permissions.object_permissions import IsOwnerOrAdmin
 
 class SkillPassportViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = SkillPassport.objects.select_related('student__user').all()
     serializer_class = SkillPassportSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsOwnerOrAdmin]
 
-    @action(detail=False, methods=['get'])
+    def get_queryset(self):
+        user = self.request.user
+        if not user or not user.is_authenticated:
+            return SkillPassport.objects.none()
+        if user.is_staff or user.is_superuser or getattr(user, 'role', '') == 'SUPER_ADMIN':
+            return SkillPassport.objects.all().select_related('student__user')
+        if hasattr(user, 'student_profile'):
+            return SkillPassport.objects.filter(student=user.student_profile).select_related('student__user')
+        return SkillPassport.objects.none()
+
+    @action(detail=False, methods=['get'], url_path='my_passport')
     def my_passport(self, request):
         student_profile = getattr(request.user, 'student_profile', None)
         if not student_profile:
@@ -38,6 +49,10 @@ class SkillPassportViewSet(viewsets.ReadOnlyModelViewSet):
 
         serializer = self.get_serializer(passport)
         return Response(serializer.data)
+
+    @action(detail=False, methods=['get'], url_path='me')
+    def me_passport(self, request):
+        return self.my_passport(request)
 
     @action(detail=False, methods=['get'], url_path='verify/(?P<signature>[^/.]+)', permission_classes=[permissions.AllowAny])
     def verify_passport(self, request, signature=None):

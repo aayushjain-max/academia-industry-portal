@@ -128,7 +128,7 @@ export default function StudentJobsPage() {
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-space-md">
                   <div className="space-y-2 flex-1">
                     <div className="flex items-center gap-2 flex-wrap font-label-mono text-xs">
-                      <span className="px-2 py-0.5 bg-accent-signal text-fg-primary font-bold border border-border-strong text-[11px]">
+                      <span className="px-2 py-0.5 bg-portal-primary text-portal-on-primary font-bold border border-border-strong text-[11px]">
                         {job.matchScore}% MATCH
                       </span>
                       <span className="text-fg-muted font-mono">{job.id}</span>

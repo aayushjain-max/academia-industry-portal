@@ -4,6 +4,8 @@ from django.conf import settings
 
 import hashlib
 
+from django.utils import timezone
+
 class SkillPassport(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     student = models.OneToOneField(
@@ -23,13 +25,16 @@ class SkillPassport(models.Model):
         ordering = ['-issued_at']
 
     def save(self, *args, **kwargs):
+        if not self.issued_at:
+            self.issued_at = timezone.now()
         if not self.passport_number:
             self.passport_number = f"SP-{str(self.id)[:8].upper()}"
         if not self.cryptographic_signature:
-            raw_sig = f"{self.passport_number}:{self.student.user.email}:{self.issued_at}"
+            raw_sig = f"{self.passport_number}:{self.student.user.email}:{self.issued_at.isoformat()}"
             self.cryptographic_signature = hashlib.sha256(raw_sig.encode()).hexdigest()
         if not self.qr_code_payload:
-            self.qr_code_payload = f"https://portal.internal/verify/passport/{self.cryptographic_signature}"
+            public_url = getattr(settings, 'PORTAL_PUBLIC_URL', 'http://localhost:3000').rstrip('/')
+            self.qr_code_payload = f"{public_url}/verify/passport/{self.cryptographic_signature}"
         super().save(*args, **kwargs)
 
     def __str__(self):

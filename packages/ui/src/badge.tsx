@@ -2,7 +2,7 @@ import React from 'react';
 import { cn } from './utils';
 
 export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
-  variant?: 'default' | 'signal' | 'success' | 'danger' | 'warning' | 'dark' | 'outline';
+  variant?: 'default' | 'signal' | 'portal' | 'portal-soft' | 'ai' | 'brand' | 'success' | 'danger' | 'warning' | 'dark' | 'outline';
 }
 
 export const Badge: React.FC<BadgeProps> = ({
@@ -13,7 +13,11 @@ export const Badge: React.FC<BadgeProps> = ({
 }) => {
   const variantStyles: Record<string, string> = {
     default: 'bg-bg-subtle text-fg-primary border-border-hairline',
-    signal: 'bg-accent-signal text-fg-primary font-bold border-border-strong',
+    signal: 'bg-portal-primary text-portal-on-primary font-bold border-border-strong',
+    portal: 'bg-portal-primary text-portal-on-primary font-bold border-border-strong',
+    'portal-soft': 'bg-portal-primary-soft text-portal-primary font-bold border-portal-border',
+    ai: 'bg-accent-signal text-fg-primary font-bold border-border-strong',
+    brand: 'bg-accent-signal text-fg-primary font-bold border-border-strong',
     success: 'bg-green-50 text-status-success border-status-success font-semibold',
     danger: 'bg-red-50 text-status-danger border-status-danger font-semibold',
     warning: 'bg-amber-50 text-status-warning border-status-warning font-semibold',

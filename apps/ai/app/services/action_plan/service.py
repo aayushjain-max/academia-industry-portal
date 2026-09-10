@@ -31,7 +31,7 @@ SKILL_CURRICULUM_MAP: Dict[str, Dict[str, Any]] = {
         ],
         "resources": [
             {"title": "Docker Official Docs & Deep Dive", "url": "https://docs.docker.com", "type": "Documentation"},
-            {"title": "Production Containerization Masterclass", "url": "https://portal.local/learn/docker-mastery", "type": "Interactive Lab"}
+            {"title": "Production Containerization Masterclass", "url": "/learn/docker-mastery", "type": "Interactive Lab"}
         ]
     },
     "kubernetes": {
@@ -143,8 +143,8 @@ class ActionPlanService:
                     }
                 ],
                 "resources": [
-                    {"title": f"Complete {skill_name} Guide", "url": f"https://portal.local/learn/{normalized}", "type": "Interactive Course"},
-                    {"title": f"{skill_name} Best Practices & Architecture", "url": "https://portal.local/docs", "type": "Reference"}
+                    {"title": f"Complete {skill_name} Guide", "url": f"/learn/{normalized}", "type": "Interactive Course"},
+                    {"title": f"{skill_name} Best Practices & Architecture", "url": "/docs", "type": "Reference"}
                 ]
             }
 

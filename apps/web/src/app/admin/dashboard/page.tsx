@@ -1,55 +1,45 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Badge, Button } from '@portal/ui';
-import { ShieldAlert, CheckCircle2, AlertTriangle, Building2, Users, FileCheck } from 'lucide-react';
+import { ShieldAlert, CheckCircle2, AlertTriangle, Building2, Users, FileCheck, Loader2 } from 'lucide-react';
+import { getInstitutionsList, InstitutionProfile } from '@/features/institutions/api';
 
 export default function AdminDashboardPage() {
   const [actionNotice, setActionNotice] = useState<string | null>(null);
+  const [institutions, setInstitutions] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadAdminData() {
+      try {
+        const data = await getInstitutionsList();
+        if (Array.isArray(data) && data.length > 0) {
+          setInstitutions(
+            data.map((inst: InstitutionProfile) => ({
+              code: inst.code || `INST-${inst.id.slice(0, 6).toUpperCase()}`,
+              name: inst.name,
+              students: inst.total_students_enrolled || 0,
+              compliance: inst.placement_rate ? `${inst.placement_rate}%` : 'N/A',
+              status: inst.is_verified ? 'TIER-1 ACCREDITED' : 'AUDIT PENDING',
+              auditBand: inst.accreditation || 'Pending',
+              deviation: inst.is_verified ? 'None (Clean)' : 'Review Pending',
+            }))
+          );
+        }
+      } catch (err) {
+        console.error('Failed to load institutions:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadAdminData();
+  }, []);
 
   const triggerNotice = (msg: string) => {
     setActionNotice(msg);
     setTimeout(() => setActionNotice(null), 4000);
   };
-
-  const institutions = [
-    {
-      code: 'INST-IITB-01',
-      name: 'Indian Institute of Technology Bombay',
-      students: 4250,
-      compliance: '99.2%',
-      status: 'TIER-1 ACCREDITED',
-      auditBand: 'A++',
-      deviation: 'None (Clean)',
-    },
-    {
-      code: 'INST-IIITH-04',
-      name: 'IIIT Hyderabad Autonomous Node',
-      students: 2100,
-      compliance: '96.8%',
-      status: 'TIER-1 ACCREDITED',
-      auditBand: 'A++',
-      deviation: 'Minor (-4h DevOps lab)',
-    },
-    {
-      code: 'INST-NITK-12',
-      name: 'National Institute of Technology Karnataka',
-      students: 3800,
-      compliance: '94.1%',
-      status: 'TIER-1 ACCREDITED',
-      auditBand: 'A+',
-      deviation: 'Curriculum deficit in K8s',
-    },
-    {
-      code: 'INST-COEP-09',
-      name: 'COEP Technological University',
-      students: 2900,
-      compliance: '88.5%',
-      status: 'AUDIT PENDING',
-      auditBand: 'A',
-      deviation: 'AICTE Lab Audit due',
-    },
-  ];
 
   return (
     <div className="w-full max-w-[1440px] mx-auto px-space-md lg:px-space-lg py-space-xl space-y-space-lg">
@@ -57,7 +47,7 @@ export default function AdminDashboardPage() {
       {actionNotice && (
         <div className="fixed bottom-6 right-6 z-50 flex items-center gap-space-sm bg-border-strong text-on-primary border border-primary px-space-md py-space-sm shadow-xl animate-fade-in font-mono text-xs">
           <span className="w-2 h-2 rounded-full bg-status-success animate-ping" />
-          <span className="font-bold text-accent-signal">ADMIN DISPATCH:</span>
+          <span className="font-bold text-portal-primary">ADMIN DISPATCH:</span>
           <span>{actionNotice}</span>
         </div>
       )}
@@ -202,27 +192,41 @@ export default function AdminDashboardPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border-hairline font-body-sm text-xs">
-              {institutions.map((inst) => (
-                <tr key={inst.code} className="hover:bg-bg-subtle transition-colors">
-                  <td className="py-3 px-3">
-                    <div className="font-semibold text-fg-primary">{inst.name}</div>
-                    <div className="font-mono text-[10px] text-fg-muted">{inst.code}</div>
-                  </td>
-                  <td className="py-3 px-3 font-mono">{inst.students.toLocaleString()}</td>
-                  <td className="py-3 px-3 text-right font-mono font-bold text-fg-primary">{inst.compliance}</td>
-                  <td className="py-3 px-3 text-center">
-                    <span className="px-1.5 py-0.5 bg-bg-subtle border border-border-hairline font-mono font-bold">
-                      {inst.auditBand}
-                    </span>
-                  </td>
-                  <td className="py-3 px-3 text-fg-secondary text-xs">{inst.deviation}</td>
-                  <td className="py-3 px-3 text-center">
-                    <Badge variant={inst.status.includes('ACCREDITED') ? 'success' : 'warning'}>
-                      {inst.status}
-                    </Badge>
+              {loading ? (
+                <tr>
+                  <td colSpan={6} className="py-8 text-center text-fg-muted font-mono">
+                    Synchronizing accredited institutional compliance ledger...
                   </td>
                 </tr>
-              ))}
+              ) : institutions.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="py-8 text-center text-fg-muted font-mono">
+                    No accredited institutions recorded in the statutory registry.
+                  </td>
+                </tr>
+              ) : (
+                institutions.map((inst) => (
+                  <tr key={inst.code} className="hover:bg-bg-subtle transition-colors">
+                    <td className="py-3 px-3">
+                      <div className="font-semibold text-fg-primary">{inst.name}</div>
+                      <div className="font-mono text-[10px] text-fg-muted">{inst.code}</div>
+                    </td>
+                    <td className="py-3 px-3 font-mono">{inst.students.toLocaleString()}</td>
+                    <td className="py-3 px-3 text-right font-mono font-bold text-fg-primary">{inst.compliance}</td>
+                    <td className="py-3 px-3 text-center">
+                      <span className="px-1.5 py-0.5 bg-bg-subtle border border-border-hairline font-mono font-bold">
+                        {inst.auditBand}
+                      </span>
+                    </td>
+                    <td className="py-3 px-3 text-fg-secondary text-xs">{inst.deviation}</td>
+                    <td className="py-3 px-3 text-center">
+                      <Badge variant={inst.status.includes('ACCREDITED') ? 'success' : 'warning'}>
+                        {inst.status}
+                      </Badge>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

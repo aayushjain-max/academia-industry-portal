@@ -8,7 +8,7 @@ export default function InstitutionHeatmapPage() {
     <div className="flex flex-col w-full space-y-space-md">
       <div className="border border-border-hairline bg-bg-surface p-space-md lg:p-space-lg">
         <div className="flex items-center gap-space-xs text-xs font-label-mono text-fg-muted mb-1">
-          <span className="w-2 h-2 bg-accent-signal" />
+          <span className="w-2 h-2 bg-portal-primary" />
           <span>INST-DEL-0842 // AICTE MODEL CURRICULUM AUDIT</span>
         </div>
         <h1 className="font-headline-lg text-headline-lg text-fg-primary uppercase font-extrabold">
@@ -34,12 +34,12 @@ export default function InstitutionHeatmapPage() {
 
         {/* Heatmap Grid Items */}
         <div className="space-y-4">
-          <div className="p-3 bg-bg-subtle border-l-4 border-accent-signal space-y-2">
+          <div className="p-3 bg-portal-primary-soft/30 border-l-4 border-portal-primary space-y-2">
             <div className="flex justify-between items-center">
               <span className="font-body-md font-bold text-fg-primary">
                 Container Orchestration &amp; Cloud Native (Kubernetes, Docker, Helm)
               </span>
-              <span className="font-label-mono text-xs px-2 py-0.5 bg-accent-signal text-fg-primary font-bold">
+              <span className="font-label-mono text-xs px-2 py-0.5 bg-portal-primary text-portal-on-primary font-bold">
                 -47% DEFICIT
               </span>
             </div>
@@ -50,9 +50,9 @@ export default function InstitutionHeatmapPage() {
               </div>
             </div>
             <div className="grid grid-cols-12 items-center gap-2 font-label-mono text-xs">
-              <span className="col-span-2 text-accent-signal font-bold">Demand: 89%</span>
+              <span className="col-span-2 text-portal-primary font-bold">Demand: 89%</span>
               <div className="col-span-10 bg-white h-2.5 overflow-hidden border border-border-hairline">
-                <div className="bg-accent-signal h-full" style={{ width: '89%' }} />
+                <div className="bg-portal-primary h-full" style={{ width: '89%' }} />
               </div>
             </div>
             <p className="text-xs text-fg-muted">
@@ -76,9 +76,9 @@ export default function InstitutionHeatmapPage() {
               </div>
             </div>
             <div className="grid grid-cols-12 items-center gap-2 font-label-mono text-xs">
-              <span className="col-span-2 text-accent-signal font-bold">Demand: 82%</span>
+              <span className="col-span-2 text-portal-primary font-bold">Demand: 82%</span>
               <div className="col-span-10 bg-bg-subtle h-2.5 overflow-hidden border border-border-hairline">
-                <div className="bg-accent-signal h-full" style={{ width: '82%' }} />
+                <div className="bg-portal-primary h-full" style={{ width: '82%' }} />
               </div>
             </div>
           </div>
@@ -99,9 +99,9 @@ export default function InstitutionHeatmapPage() {
               </div>
             </div>
             <div className="grid grid-cols-12 items-center gap-2 font-label-mono text-xs">
-              <span className="col-span-2 text-accent-signal font-bold">Demand: 96%</span>
+              <span className="col-span-2 text-portal-primary font-bold">Demand: 96%</span>
               <div className="col-span-10 bg-bg-subtle h-2.5 overflow-hidden border border-border-hairline">
-                <div className="bg-accent-signal h-full" style={{ width: '96%' }} />
+                <div className="bg-portal-primary h-full" style={{ width: '96%' }} />
               </div>
             </div>
           </div>

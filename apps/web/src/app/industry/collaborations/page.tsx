@@ -18,8 +18,8 @@ export default function IndustryCollaborationsPage() {
       {/* Toast Notification */}
       {actionNotice && (
         <div className="fixed bottom-6 right-6 z-50 flex items-center gap-space-sm bg-border-strong text-on-primary border border-primary px-space-md py-space-sm shadow-xl animate-fade-in">
-          <span className="w-2 h-2 rounded-full bg-[#FACC15] animate-ping" />
-          <span className="font-label-mono text-label-mono uppercase tracking-wider text-[#FACC15]">
+          <span className="w-2 h-2 rounded-full bg-portal-primary animate-ping" />
+          <span className="font-label-mono text-label-mono uppercase tracking-wider text-portal-primary">
             PROGRAM TELEMETRY:
           </span>
           <span className="font-body-sm text-body-sm text-surface-container-high">{actionNotice}</span>

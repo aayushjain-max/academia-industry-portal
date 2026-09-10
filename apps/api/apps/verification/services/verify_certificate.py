@@ -4,15 +4,20 @@ import json
 from django.conf import settings
 from typing import Dict, Any, Tuple
 
-SECRET_SALT = getattr(settings, 'SECRET_KEY', 'default-cryptographic-signing-key')
+def _get_secret_salt() -> str:
+    secret = getattr(settings, 'SECRET_KEY', None)
+    if not secret:
+        raise ValueError("SECRET_KEY must be configured for cryptographic verification.")
+    return secret
 
 def generate_cryptographic_hash(payload: Dict[str, Any]) -> str:
     """
     Generates a deterministic HMAC-SHA256 signature for a certificate/badge payload.
     """
+    salt = _get_secret_salt()
     serialized = json.dumps(payload, sort_keys=True, default=str)
     return hmac.new(
-        SECRET_SALT.encode('utf-8'),
+        salt.encode('utf-8'),
         serialized.encode('utf-8'),
         hashlib.sha256
     ).hexdigest()

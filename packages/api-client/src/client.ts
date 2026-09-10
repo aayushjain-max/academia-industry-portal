@@ -1,28 +1,65 @@
 export interface ApiClientConfig {
   baseUrl?: string;
   getToken?: () => string | null | Promise<string | null>;
+  getRefreshToken?: () => string | null | Promise<string | null>;
+  onTokenRefreshed?: (access: string, refresh?: string) => void | Promise<void>;
   onUnauthorized?: () => void;
+}
+
+export interface RequestOptions extends RequestInit {
+  _isRetry?: boolean;
 }
 
 export class ApiClient {
   private baseUrl: string;
   private getToken?: () => string | null | Promise<string | null>;
+  private getRefreshToken?: () => string | null | Promise<string | null>;
+  private onTokenRefreshed?: (access: string, refresh?: string) => void | Promise<void>;
   private onUnauthorized?: () => void;
+  private refreshPromise: Promise<string | null> | null = null;
 
   constructor(config: ApiClientConfig = {}) {
     this.baseUrl = (config.baseUrl || (typeof process !== 'undefined' && process.env?.NEXT_PUBLIC_API_URL) || 'http://localhost:8000/api/v1').replace(/\/$/, '');
     this.getToken = config.getToken;
+    this.getRefreshToken = config.getRefreshToken;
+    this.onTokenRefreshed = config.onTokenRefreshed;
     this.onUnauthorized = config.onUnauthorized;
   }
 
-  async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+  private async tryRefreshToken(): Promise<string | null> {
+    if (!this.getRefreshToken) return null;
+    const refreshToken = await this.getRefreshToken();
+    if (!refreshToken) return null;
+
+    try {
+      const res = await fetch(`${this.baseUrl}/auth/refresh/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh: refreshToken }),
+      });
+      if (!res.ok) return null;
+      const data = await res.json();
+      if (data.access && this.onTokenRefreshed) {
+        await this.onTokenRefreshed(data.access, data.refresh);
+      }
+      return data.access || null;
+    } catch {
+      return null;
+    }
+  }
+
+  async request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
     const formattedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
     const url = endpoint.startsWith('http') ? endpoint : `${this.baseUrl}${formattedEndpoint}`;
 
+    const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData;
     const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
+      ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
       ...(options.headers as Record<string, string>),
     };
+    if (isFormData && headers['Content-Type'] === 'application/json') {
+      delete headers['Content-Type'];
+    }
 
     if (this.getToken) {
       const token = await this.getToken();
@@ -31,12 +68,30 @@ export class ApiClient {
       }
     }
 
-    const response = await fetch(url, {
+    let response = await fetch(url, {
       ...options,
       headers,
     });
 
-    if (response.status === 401 && this.onUnauthorized) {
+    // Handle 401 Unauthorized with automatic token refresh
+    if (response.status === 401 && !options._isRetry && !endpoint.includes('/auth/login') && !endpoint.includes('/auth/refresh') && !endpoint.includes('/auth/register')) {
+      if (!this.refreshPromise) {
+        this.refreshPromise = this.tryRefreshToken().finally(() => {
+          this.refreshPromise = null;
+        });
+      }
+
+      const newAccessToken = await this.refreshPromise;
+      if (newAccessToken) {
+        headers['Authorization'] = `Bearer ${newAccessToken}`;
+        response = await fetch(url, {
+          ...options,
+          headers,
+        });
+      } else if (this.onUnauthorized) {
+        this.onUnauthorized();
+      }
+    } else if (response.status === 401 && this.onUnauthorized) {
       this.onUnauthorized();
     }
 

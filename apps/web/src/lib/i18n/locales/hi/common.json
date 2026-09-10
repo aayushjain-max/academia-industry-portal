@@ -1,10 +1,10 @@
 {
-  "portal_title": "Academia-Industry Portal",
-  "welcome": "Welcome",
-  "dashboard": "Dashboard",
-  "opportunities": "Opportunities",
-  "skills": "Skills",
-  "assessments": "Assessments",
-  "login": "Sign In",
-  "register": "Register"
+  "portal_title": "अकादमिक-उद्योग सहयोग पोर्टल",
+  "welcome": "स्वागत है",
+  "dashboard": "डैशबोर्ड",
+  "opportunities": "अवसर",
+  "skills": "कौशल",
+  "assessments": "मूल्यांकन",
+  "login": "साइन इन करें",
+  "register": "पंजीकरण करें"
 }

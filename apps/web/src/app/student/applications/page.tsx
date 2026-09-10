@@ -12,87 +12,59 @@ import {
   DialogClose,
 } from '@/components/ui/dialog';
 
+import { applicationsApi, ApplicationItem } from '@/lib/api/applications';
+
 export default function StudentApplicationsPage() {
   const [filter, setFilter] = useState<'all' | 'interview' | 'review' | 'offer'>('all');
   const [activeChamber, setActiveChamber] = useState<any | null>(null);
+  const [applications, setApplications] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const applications = [
-    {
-      id: 'APP-TN-0912',
-      company: 'TechNova Research Labs',
-      role: 'Backend Distributed Systems Engineer',
-      stipend: '₹45,000 / mo (PPO ₹22 LPA)',
-      stage: 'ROUND 02 INTERVIEW',
-      date: 'OCT 24 // 14:00 IST',
-      status: 'INTERVIEW SCHEDULED',
-      statusType: 'signal' as const,
-      category: 'interview',
-      proctored: true,
-      panel: 'Dr. S. Kulkarni (Principal Architect)',
-      techFocus: 'Microservices, Docker Compose, PostgreSQL indexing',
-    },
-    {
-      id: 'APP-TCS-4410',
-      company: 'Tata Consultancy Services',
-      role: 'Cloud Infrastructure Associate',
-      stipend: '₹38,000 / mo',
-      stage: 'SCREENING EVALUATION',
-      date: 'OCT 26, 2024',
-      status: 'UNDER REVIEW',
-      statusType: 'default' as const,
-      category: 'review',
-      proctored: false,
-      panel: 'Enterprise Talent Assessment Engine',
-      techFocus: 'Kubernetes Cluster Administration, Linux Kernels',
-    },
-    {
-      id: 'APP-BARC-7801',
-      company: 'Barclays Global Service',
-      role: 'FinTech Microservices Intern',
-      stipend: '₹50,000 / mo (PPO ₹18.5 LPA)',
-      stage: 'OFFER LETTER ISSUED',
-      date: 'NOV 01, 2024',
-      status: 'OFFER PENDING',
-      statusType: 'success' as const,
-      category: 'offer',
-      proctored: false,
-      panel: 'Global Core Banking Hiring Board',
-      techFocus: 'Event Sourcing, Apache Kafka, Resiliency Patterns',
-    },
-    {
-      id: 'APP-ISRO-3021',
-      company: 'ISRO Space Applications Centre',
-      role: 'Satellite Telemetry Research Fellow',
-      stipend: '₹35,000 / mo Grant',
-      stage: 'SECURITY CLEARANCE',
-      date: 'OCT 28, 2024',
-      status: 'UNDER REVIEW',
-      statusType: 'default' as const,
-      category: 'review',
-      proctored: false,
-      panel: 'SAC Payload Evaluation Committee',
-      techFocus: 'DSP, SDR Telemetry, High-speed Demodulation',
-    },
-    {
-      id: 'APP-CISCO-8809',
-      company: 'Cisco Networking Systems',
-      role: 'Autonomous SDN Kernel Fellow',
-      stipend: '₹55,000 / mo',
-      stage: 'TECHNICAL INTERVIEW',
-      date: 'OCT 29 // 11:30 IST',
-      status: 'INTERVIEW SCHEDULED',
-      statusType: 'signal' as const,
-      category: 'interview',
-      proctored: true,
-      panel: 'Core Routing Architecture Team',
-      techFocus: 'eBPF, Linux Packet Filtering, Golang Networking',
-    },
-  ];
+  React.useEffect(() => {
+    async function loadApplications() {
+      try {
+        const res = await applicationsApi.getAll();
+        if (Array.isArray(res) && res.length > 0) {
+          const mapped = res.map((app: ApplicationItem, idx: number) => {
+            const isInterview = app.status === 'ACCEPTED' || (app.status as string) === 'INTERVIEW';
+            const isOffer = (app.status as string) === 'ACCEPTED';
+            const category = isOffer ? 'offer' : isInterview ? 'interview' : 'review';
+            const statusType = isOffer ? ('success' as const) : isInterview ? ('signal' as const) : ('default' as const);
+
+            return {
+              id: app.id ? `APP-${app.id.slice(0, 8).toUpperCase()}` : `APP-${idx + 1000}`,
+              company: app.opportunity?.company_name || app.opportunity?.industry?.company_name || 'Partner Enterprise',
+              role: app.opportunity?.title || 'Engineering Fellow',
+              stipend: app.opportunity?.stipend_amount ? `₹${app.opportunity.stipend_amount.toLocaleString()} / mo` : 'Standard Fellowship',
+              stage: app.status?.replace('_', ' ') || 'UNDER REVIEW',
+              date: app.applied_at ? new Date(app.applied_at).toLocaleDateString() : 'RECENT',
+              status: app.status?.replace('_', ' ') || 'UNDER REVIEW',
+              statusType,
+              category,
+              proctored: isInterview,
+              panel: 'Industry Technical Evaluation Board',
+              techFocus: 'Verified Competencies & Portfolio Repository',
+            };
+          });
+          setApplications(mapped);
+        }
+      } catch (err) {
+        console.warn('Unable to load applications:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadApplications();
+  }, []);
 
   const filtered = applications.filter((app) => {
     if (filter === 'all') return true;
     return app.category === filter;
   });
+
+  const interviewsCount = applications.filter((a) => a.category === 'interview').length;
+  const offersCount = applications.filter((a) => a.category === 'offer').length;
+  const reviewCount = applications.filter((a) => a.category === 'review').length;
 
   return (
     <div className="space-y-space-lg">
@@ -100,7 +72,7 @@ export default function StudentApplicationsPage() {
       <div className="pb-space-md border-b border-border-strong flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <span className="font-label-mono text-label-mono text-fg-muted uppercase tracking-wider block">
-            ATS LIFECYCLE TRACKER // CANDIDATE STU-8042
+            ATS LIFECYCLE TRACKER // CANDIDATE DOSSIER
           </span>
           <h1 className="font-headline-lg text-headline-lg text-fg-primary tracking-tight uppercase mt-1 font-extrabold">
             Active Application Dockets
@@ -113,15 +85,15 @@ export default function StudentApplicationsPage() {
         <div className="flex items-center gap-space-sm font-label-mono text-xs">
           <div className="p-2 border border-border-hairline bg-bg-surface text-center">
             <span className="text-fg-muted block text-[10px]">ACTIVE</span>
-            <span className="text-fg-primary font-bold text-sm">05</span>
+            <span className="text-fg-primary font-bold text-sm">{applications.length.toString().padStart(2, '0')}</span>
           </div>
           <div className="p-2 border border-border-hairline bg-bg-surface text-center">
             <span className="text-fg-muted block text-[10px]">INTERVIEWS</span>
-            <span className="text-status-warning font-bold text-sm">02</span>
+            <span className="text-status-warning font-bold text-sm">{interviewsCount.toString().padStart(2, '0')}</span>
           </div>
           <div className="p-2 border border-border-hairline bg-bg-surface text-center">
             <span className="text-fg-muted block text-[10px]">OFFERS</span>
-            <span className="text-status-success font-bold text-sm">01</span>
+            <span className="text-status-success font-bold text-sm">{offersCount.toString().padStart(2, '0')}</span>
           </div>
         </div>
       </div>
@@ -138,17 +110,29 @@ export default function StudentApplicationsPage() {
                 : 'bg-bg-subtle text-fg-muted border-border-hairline hover:text-fg-primary'
             }`}
           >
-            {tab === 'all' && 'All Applications (05)'}
-            {tab === 'interview' && 'Interviews Scheduled (02)'}
-            {tab === 'review' && 'Under Evaluation (02)'}
-            {tab === 'offer' && 'Extended Offers (01)'}
+            {tab === 'all' && `All Applications (${applications.length})`}
+            {tab === 'interview' && `Interviews Scheduled (${interviewsCount})`}
+            {tab === 'review' && `Under Evaluation (${reviewCount})`}
+            {tab === 'offer' && `Extended Offers (${offersCount})`}
           </button>
         ))}
       </div>
 
       {/* Applications List */}
       <div className="space-y-space-md">
-        {filtered.map((app) => (
+        {loading ? (
+          <div className="p-12 text-center font-mono text-xs text-fg-muted bg-bg-surface border border-border-hairline">
+            Synchronizing applicant tracking telemetry...
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="p-12 text-center bg-bg-surface border border-dashed border-border-strong space-y-2">
+            <h3 className="font-headline-sm text-sm font-bold uppercase text-fg-primary">No Applications in this Category</h3>
+            <p className="font-body-sm text-xs text-fg-muted max-w-md mx-auto">
+              You currently have no active applications recorded under this filter. Apply to opportunities to track hiring pipelines.
+            </p>
+          </div>
+        ) : (
+          filtered.map((app) => (
           <div
             key={app.id}
             className="bg-bg-surface border border-border-strong p-space-lg hover:shadow-[3px_3px_0px_0px_#18181B] transition-all flex flex-col lg:flex-row lg:items-center justify-between gap-space-md"
@@ -199,7 +183,8 @@ export default function StudentApplicationsPage() {
               )}
             </div>
           </div>
-        ))}
+        ))
+      )}
       </div>
 
       {/* Proctored Chamber Modal */}
@@ -217,7 +202,7 @@ export default function StudentApplicationsPage() {
               <div className="p-3 bg-bg-canvas border border-border-hairline space-y-2">
                 <div className="flex justify-between">
                   <span className="text-fg-muted">SESSION SCHEDULE:</span>
-                  <span className="text-accent-signal font-bold">{activeChamber.date}</span>
+                  <span className="text-portal-primary font-bold">{activeChamber.date}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-fg-muted">LEAD EVALUATOR:</span>

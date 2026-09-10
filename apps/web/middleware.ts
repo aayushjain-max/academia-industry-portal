@@ -1,7 +1,43 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-function extractRoleFromToken(token?: string): string | null {
+interface JwtPayload {
+  role?: string;
+  user_role?: string;
+  exp?: number;
+  user_id?: string;
+  email?: string;
+}
+
+async function verifyJwtSignature(token: string): Promise<boolean> {
+  const secret = process.env.JWT_SECRET_KEY || process.env.SECRET_KEY || process.env.NEXT_PUBLIC_JWT_SECRET;
+  if (!secret) {
+    // If no secret configured in edge environment, fall back to structural/expiration checks
+    return true;
+  }
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return false;
+
+    const [headerB64, payloadB64, sigB64] = parts;
+    const data = new TextEncoder().encode(`${headerB64}.${payloadB64}`);
+    const rawSig = Uint8Array.from(atob(sigB64.replace(/-/g, '+').replace(/_/g, '/')), (c) => c.charCodeAt(0));
+
+    const key = await crypto.subtle.importKey(
+      'raw',
+      new TextEncoder().encode(secret),
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['verify']
+    );
+
+    return await crypto.subtle.verify('HMAC', key, rawSig, data);
+  } catch {
+    return false;
+  }
+}
+
+function extractPayloadFromToken(token?: string): JwtPayload | null {
   if (!token) return null;
   try {
     const parts = token.split('.');
@@ -13,20 +49,40 @@ function extractRoleFromToken(token?: string): string | null {
           .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
           .join('')
       );
-      const payload = JSON.parse(jsonPayload);
-      return payload.role || payload.user_role || null;
+      const payload: JwtPayload = JSON.parse(jsonPayload);
+      
+      // Check expiration if present
+      if (payload.exp && payload.exp * 1000 < Date.now()) {
+        return null;
+      }
+      return payload;
     }
   } catch {
-    // Fallback if parsing fails
+    // Parsing error
   }
   return null;
 }
 
-export function middleware(request: NextRequest) {
+function sanitizeRedirectPath(path?: string | null): string {
+  if (!path) return '/';
+  if (path.startsWith('/') && !path.startsWith('//') && !path.includes('\\')) {
+    return path;
+  }
+  return '/';
+}
+
+export async function middleware(request: NextRequest) {
   const token = request.cookies.get('access_token')?.value;
-  const userRoleCookie = request.cookies.get('user_role')?.value;
-  const tokenRole = extractRoleFromToken(token);
-  const activeRole = (tokenRole || userRoleCookie || '').toUpperCase().trim();
+  let payload = extractPayloadFromToken(token);
+
+  if (token && payload) {
+    const isSigValid = await verifyJwtSignature(token);
+    if (!isSigValid) {
+      payload = null;
+    }
+  }
+  const tokenRole = payload?.role || payload?.user_role || null;
+  const activeRole = (tokenRole || '').toUpperCase().trim();
   const { pathname } = request.nextUrl;
 
   const isAuthRoute =
@@ -42,7 +98,7 @@ export function middleware(request: NextRequest) {
     pathname.startsWith('/institution') ||
     pathname.startsWith('/admin');
 
-  // If visiting auth route while authenticated, redirect to appropriate dashboard
+  // If visiting auth route while authenticated with valid token, redirect to appropriate dashboard
   if (isAuthRoute && token && activeRole) {
     let dashboardRoute = '/';
     if (activeRole === 'STUDENT') dashboardRoute = '/student/dashboard';
@@ -54,11 +110,14 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL(dashboardRoute, request.url));
   }
 
-  // If visiting protected route without token, redirect to login
-  if (isProtectedRoute && !token) {
+  // If visiting protected route without valid token, redirect to login
+  if (isProtectedRoute && (!token || !payload)) {
     const loginUrl = new URL('/login', request.url);
-    loginUrl.searchParams.set('redirect', pathname);
-    return NextResponse.redirect(loginUrl);
+    loginUrl.searchParams.set('redirect', sanitizeRedirectPath(pathname));
+    const response = NextResponse.redirect(loginUrl);
+    // Clear potentially stale invalid token cookies
+    response.cookies.delete('access_token');
+    return response;
   }
 
   // Enforce role-specific prefixes
@@ -88,3 +147,4 @@ export function middleware(request: NextRequest) {
 export const config = {
   matcher: ['/((?!_next/static|_next/image|favicon.ico|public|api).*)'],
 };
+

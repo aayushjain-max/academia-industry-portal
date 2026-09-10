@@ -15,8 +15,11 @@ class SMSService:
         
         # Clean phone number
         cleaned_phone = phone_number.strip().replace(" ", "").replace("-", "")
+        default_cc = os.getenv('DEFAULT_COUNTRY_CODE', '+91').strip()
+        if not default_cc.startswith("+"):
+            default_cc = f"+{default_cc}"
         if not cleaned_phone.startswith("+"):
-            cleaned_phone = f"+91{cleaned_phone}"
+            cleaned_phone = f"{default_cc}{cleaned_phone}"
 
         logger.info(f"[SMS DISPATCH] Provider={sms_provider} To={cleaned_phone} Template={template_id} Msg={message}")
 

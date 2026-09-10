@@ -4,14 +4,22 @@ import { LearningResource, UserLearningProgress } from '@portal/shared-types';
 export class LearningApi {
   constructor(private client: ApiClient) {}
 
-  async getRecommendations(userId: string) {
-    return this.client.request<LearningResource[]>(`/learning/recommendations/?user=${userId}`);
+  async getResources() {
+    return this.client.request<LearningResource[]>('/learning/');
   }
 
-  async updateProgress(resourceId: string, progress: Partial<UserLearningProgress>) {
-    return this.client.request<UserLearningProgress>(`/learning/progress/${resourceId}/`, {
+  async getRecommendations() {
+    return this.client.request<LearningResource[]>('/learning/recommended/');
+  }
+
+  async getProgress() {
+    return this.client.request<UserLearningProgress[]>('/learning/progress/');
+  }
+
+  async updateProgress(resourceId: string, progress: { progress_percentage: number; completed?: boolean }) {
+    return this.client.request<UserLearningProgress>('/learning/progress/', {
       method: 'POST',
-      body: JSON.stringify(progress),
+      body: JSON.stringify({ resource: resourceId, ...progress }),
     });
   }
 }

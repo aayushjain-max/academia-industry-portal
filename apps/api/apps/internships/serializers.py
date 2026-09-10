@@ -13,3 +13,6 @@ class InternshipPostingSerializer(serializers.ModelSerializer):
             'ppo_eligible', 'created_at', 'updated_at'
         ]
 
+InternshipSerializer = InternshipPostingSerializer
+
+

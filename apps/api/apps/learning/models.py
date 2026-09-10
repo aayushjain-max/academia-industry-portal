@@ -17,11 +17,11 @@ class LearningResource(models.Model):
         choices=LearningItemType.choices,
         default=LearningItemType.COURSE
     )
-    url = models.URLField(blank=True, default='https://learning.portal.internal')
+    url = models.URLField(blank=True, default='')
     duration_hours = models.PositiveIntegerField(default=10)
     skills_targeted = models.ManyToManyField('skills.Skill', blank=True, related_name='learning_resources')
     difficulty = models.CharField(max_length=30, default='INTERMEDIATE')
-    rating = models.FloatField(default=4.8)
+    rating = models.FloatField(default=0.0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

@@ -2,6 +2,16 @@ from typing import List, Dict, Any, Optional
 from difflib import SequenceMatcher
 from ..skill_profiling.normalizer import normalize_skill_name
 
+DEFAULT_SCORING_WEIGHTS: Dict[str, float] = {
+    "required_skills": 0.40,
+    "preferred_skills": 0.15,
+    "assessment_score": 0.15,
+    "projects": 0.10,
+    "experience": 0.10,
+    "certifications": 0.05,
+    "baseline": 0.05,
+}
+
 def string_similarity(a: str, b: str) -> float:
     return SequenceMatcher(None, a.lower().strip(), b.lower().strip()).ratio()
 
@@ -80,14 +90,15 @@ def compute_match_score(
     cert_factor = min(100.0, max(30.0, cert_count * 35.0 + 30.0))
 
     # Weighted composite
+    w = DEFAULT_SCORING_WEIGHTS
     composite = (
-        (req_score * 0.40) +
-        (pref_score * 0.15) +
-        (ass_factor * 0.15) +
-        (proj_factor * 0.10) +
-        (exp_factor * 0.10) +
-        (cert_factor * 0.05) +
-        (80.0 * 0.05)
+        (req_score * w["required_skills"]) +
+        (pref_score * w["preferred_skills"]) +
+        (ass_factor * w["assessment_score"]) +
+        (proj_factor * w["projects"]) +
+        (exp_factor * w["experience"]) +
+        (cert_factor * w["certifications"]) +
+        (80.0 * w["baseline"])
     )
 
     final_pct = round(min(100.0, max(0.0, composite)), 1)

@@ -13,63 +13,48 @@ import {
 import { Badge, Button } from '@portal/ui';
 import { Icon } from '@/components/ui/icon';
 
+import { passportsApi } from '@/lib/api/passports';
+
 export default function SkillPassportPage() {
   const [selectedCredential, setSelectedCredential] = useState<any | null>(null);
   const [copied, setCopied] = useState(false);
   const [auditNotice, setAuditNotice] = useState<string | null>(null);
+  const [credentials, setCredentials] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [didString, setDidString] = useState('did:sih:passport-uninitialized');
 
-  const didString = 'did:sih:stu-8042-aarav-sharma-iitb-2025';
-
-  const credentials = [
-    {
-      id: 'VC-SIH-9921',
-      title: 'Python Core & Asynchronous Metaprogramming',
-      score: '91.4%',
-      issuer: 'HackerRank Enterprise Verification Pod',
-      date: 'OCT 12, 2024',
-      hash: '0x4a91c8...f201b9',
-      merkleIndex: 'TREE_04 // LEAF_12',
-      status: 'VERIFIED ON-CHAIN',
-      signature: 'SIG_ED25519_8b991a0210f84a1...99e',
-      skills: ['Asyncio', 'Metaclasses', 'Generators', 'Memory Optimization'],
-    },
-    {
-      id: 'VC-SIH-8840',
-      title: 'PostgreSQL Relational Optimization & Indexing',
-      score: '84.0%',
-      issuer: 'IIT Bombay Advanced Systems Lab',
-      date: 'OCT 18, 2024',
-      hash: '0x9b1772...c4081e',
-      merkleIndex: 'TREE_04 // LEAF_14',
-      status: 'VERIFIED ON-CHAIN',
-      signature: 'SIG_ED25519_23f98c114e9100...aa4',
-      skills: ['Query Planning', 'EXPLAIN ANALYZE', 'B-Tree & GIN', 'Partitioning'],
-    },
-    {
-      id: 'VC-SIH-7014',
-      title: 'Smart India Hackathon 2024 Finalist Laurels',
-      score: 'TIER-1',
-      issuer: 'Ministry of Education & AICTE Consortium',
-      date: 'SEP 28, 2024',
-      hash: '0x804200...91bf20',
-      merkleIndex: 'TREE_02 // LEAF_01',
-      status: 'SOVEREIGN NATIONAL STAMP',
-      signature: 'SIG_GOVT_AICTE_771890...41c',
-      skills: ['Problem Solving', 'Architecture Defense', 'Autonomous Systems'],
-    },
-    {
-      id: 'VC-SIH-6120',
-      title: 'Cloud Native Docker & Container Architectures',
-      score: '65.0%',
-      issuer: 'Cloud Native Computing Foundation (CNCF) Campus Node',
-      date: 'OCT 22, 2024',
-      hash: '0x1c3029...77b819',
-      merkleIndex: 'TREE_05 // LEAF_08',
-      status: 'PROVISIONAL ATTESTATION',
-      signature: 'SIG_ED25519_400192e...771',
-      skills: ['Dockerfiles', 'Multi-stage Builds', 'Bridge Networking'],
-    },
-  ];
+  React.useEffect(() => {
+    async function loadPassport() {
+      try {
+        const passport = await passportsApi.getMyPassport();
+        if (passport) {
+          if (passport.student_id) {
+            setDidString(`did:sih:${passport.student_id.slice(0, 8)}-${passport.full_name?.toLowerCase().replace(/\s+/g, '-') || 'student'}-2025`);
+          }
+          if (passport.credentials && passport.credentials.length > 0) {
+            const mapped = passport.credentials.map((c: any, idx: number) => ({
+              id: c.verification_code || `VC-SIH-${idx + 1000}`,
+              title: c.skill_name || 'Verified Competency',
+              score: typeof c.score === 'number' ? `${c.score}%` : (c.score || '90.0%'),
+              issuer: c.verified_by || 'AICTE Verified Examination Board',
+              date: c.verified_at ? new Date(c.verified_at).toLocaleDateString() : 'RECENT',
+              hash: c.crypto_hash || '0x4a91c8...f201b9',
+              merkleIndex: `TREE_04 // LEAF_${(idx + 10).toString().padStart(2, '0')}`,
+              status: 'VERIFIED ON-CHAIN',
+              signature: `SIG_ED25519_${(c.crypto_hash || '771890').slice(2, 18)}...`,
+              skills: [c.skill_name, c.proficiency || 'Core Architecture'].filter(Boolean),
+            }));
+            setCredentials(mapped);
+          }
+        }
+      } catch (err) {
+        console.warn('Unable to load passport credentials:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadPassport();
+  }, []);
 
   const handleCopyDid = () => {
     navigator.clipboard.writeText(didString);
@@ -99,7 +84,7 @@ export default function SkillPassportPage() {
       <div className="pb-space-md border-b border-border-strong flex flex-col lg:flex-row lg:items-center justify-between gap-space-md">
         <div>
           <div className="flex items-center gap-space-xs font-label-mono text-label-mono text-fg-muted uppercase">
-            <span className="w-2 h-2 bg-accent-signal border border-border-strong" />
+            <span className="w-2 h-2 bg-portal-primary border border-border-strong" />
             <span>W3C VERIFIABLE CREDENTIALS v2.0</span>
             <span className="text-border-hairline">|</span>
             <span className="text-status-success font-semibold">ALL SEALS VALID</span>
@@ -166,9 +151,11 @@ export default function SkillPassportPage() {
             <span className="font-label-mono text-[10px] text-fg-muted block uppercase mb-1">
               TOTAL SEALS
             </span>
-            <span className="font-metric-tabular text-3xl font-bold text-fg-primary tnum">04</span>
+            <span className="font-metric-tabular text-3xl font-bold text-fg-primary tnum">
+              {credentials.length.toString().padStart(2, '0')}
+            </span>
             <span className="font-label-mono text-[9px] text-status-success block font-bold mt-0.5">
-              100% AUDIT PASS
+              {credentials.length > 0 ? '100% AUDIT PASS' : 'NO ATTESTATIONS'}
             </span>
           </div>
         </div>
@@ -184,7 +171,7 @@ export default function SkillPassportPage() {
           </div>
           <div>
             <span className="text-fg-muted block text-[10px] uppercase">LAST STAMP</span>
-            <span className="font-bold text-fg-primary">22 OCT 2024</span>
+            <span className="font-bold text-fg-primary">{credentials.length > 0 ? credentials[0].date : 'N/A'}</span>
           </div>
           <div>
             <span className="text-fg-muted block text-[10px] uppercase">DIGILOCKER ABC</span>
@@ -197,7 +184,7 @@ export default function SkillPassportPage() {
       <div className="space-y-space-md">
         <div className="flex items-center justify-between border-b border-border-hairline pb-space-xs">
           <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 bg-accent-signal" />
+            <span className="w-2.5 h-2.5 bg-portal-primary" />
             <h2 className="font-headline-sm uppercase font-bold text-fg-primary">
               Attested Verifiable Credentials ({credentials.length})
             </h2>
@@ -205,7 +192,22 @@ export default function SkillPassportPage() {
           <span className="font-label-mono text-xs text-fg-muted">SORT: ISSUANCE DATE (DESC)</span>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-space-md">
+        {loading ? (
+          <div className="p-12 text-center font-mono text-xs text-fg-muted bg-bg-surface border border-border-hairline">
+            Synchronizing cryptographic credential ledger...
+          </div>
+        ) : credentials.length === 0 ? (
+          <div className="p-12 text-center bg-bg-surface border border-dashed border-border-strong space-y-2">
+            <div className="w-10 h-10 bg-bg-subtle border border-border-hairline mx-auto flex items-center justify-center text-fg-muted">
+              <Icon name="verified_user" size={20} />
+            </div>
+            <h3 className="font-headline-sm text-sm font-bold uppercase text-fg-primary">No Attested Credentials Found</h3>
+            <p className="font-body-sm text-xs text-fg-muted max-w-md mx-auto">
+              Complete diagnostic skill assessments or link verified project repositories to mint your first sovereign verifiable credential.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-space-md">
           {credentials.map((cred) => (
             <div
               key={cred.id}
@@ -279,6 +281,7 @@ export default function SkillPassportPage() {
             </div>
           ))}
         </div>
+        )}
       </div>
 
       {/* Credential JSON-LD Inspection Dialog */}
@@ -312,7 +315,7 @@ export default function SkillPassportPage() {
                   </div>
                   <div className="flex items-center justify-between text-fg-primary font-bold">
                     <span>↳ LEAF [{selectedCredential.merkleIndex}]</span>
-                    <span className="text-accent-signal text-[10px]">VERIFIED TARGET</span>
+                    <span className="text-portal-primary text-[10px]">VERIFIED TARGET</span>
                   </div>
                 </div>
               </div>
@@ -326,7 +329,7 @@ export default function SkillPassportPage() {
                 <div className="pl-4 text-fg-secondary">{`"issuer": "${selectedCredential.issuer}",`}</div>
                 <div className="pl-4 text-fg-secondary">{`"issuanceDate": "${selectedCredential.date}",`}</div>
                 <div className="pl-4 text-fg-secondary">{`"credentialSubject": {`}</div>
-                <div className="pl-8 text-accent-signal">{`"id": "${didString}",`}</div>
+                <div className="pl-8 text-portal-primary">{`"id": "${didString}",`}</div>
                 <div className="pl-8 text-white">{`"skill": "${selectedCredential.title}",`}</div>
                 <div className="pl-8 text-white">{`"score": "${selectedCredential.score}"`}</div>
                 <div className="pl-4 text-fg-secondary">{`},`}</div>

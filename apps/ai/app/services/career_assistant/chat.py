@@ -13,10 +13,20 @@ class AssistantChat:
     @classmethod
     def sanitize_prompt(cls, user_message: str) -> str:
         """
-        Sanitizes candidate input to mitigate prompt injection attempts.
+        Sanitizes candidate input to mitigate prompt injection attempts and enforce length limits.
         """
-        clean_text = user_message.strip()
+        if not user_message:
+            return ""
+        clean_text = user_message.strip()[:2000]
         for pattern in cls.INJECTION_PATTERNS:
             if re.search(pattern, clean_text, re.IGNORECASE):
                 return "Please provide standard career guidance and skill development recommendations."
         return clean_text
+
+    @classmethod
+    def format_user_prompt(cls, user_message: str) -> str:
+        """
+        Wraps user query in explicit isolation tags.
+        """
+        sanitized = cls.sanitize_prompt(user_message)
+        return f"<candidate_query>\n{sanitized}\n</candidate_query>"

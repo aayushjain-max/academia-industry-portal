@@ -6,7 +6,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { NodePageShell } from '@/components/dashboard/node-page-shell';
 import { Button, Badge, Card } from '@portal/ui';
 import { Icon } from '@/components/ui/icon';
-import { submitAssessmentAttempt, AssessmentAttemptResult } from '@/features/assessments/api';
+import { submitAssessmentAttempt, getAssessmentQuestions, AssessmentAttemptResult } from '@/features/assessments/api';
 
 interface Question {
   id: string;
@@ -14,50 +14,40 @@ interface Question {
   options: string[];
 }
 
-const SAMPLE_QUESTIONS: Record<string, Question[]> = {
-  default: [
-    {
-      id: 'q1',
-      text: 'In asynchronous Python (asyncio), what happens when an event loop executes an `await` statement on a non-blocking coroutine?',
-      options: [
-        'A. It blocks the entire operating system thread until completion.',
-        'B. It yields execution back to the event loop, allowing other scheduled tasks to run.',
-        'C. It creates a new native OS process.',
-        'D. It disables garbage collection during execution.',
-      ],
-    },
-    {
-      id: 'q2',
-      text: 'Which PostgreSQL index type is optimal for array containment (`@>`) queries or full-text search?',
-      options: [
-        'A. B-Tree index',
-        'B. Hash index',
-        'C. GIN (Generalized Inverted Index)',
-        'D. BRIN index',
-      ],
-    },
-    {
-      id: 'q3',
-      text: 'What is the primary architectural benefit of an event-driven architecture with Apache Kafka?',
-      options: [
-        'A. Strict synchronous execution order across all microservices.',
-        'B. Decoupling producer and consumer services with high-throughput durability.',
-        'C. Direct database row-level locking across networks.',
-        'D. Zero CPU consumption during idle polling.',
-      ],
-    },
-  ],
-};
-
 export default function AssessmentRunnerPage() {
   const params = useParams();
   const router = useRouter();
   const testId = (params?.id as string) || 'test-tech-01';
 
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [loading, setLoading] = useState(true);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [result, setResult] = useState<AssessmentAttemptResult | null>(null);
   const [timeLeft, setTimeLeft] = useState(900); // 15 mins
+
+  useEffect(() => {
+    async function loadQuestions() {
+      try {
+        const liveQuestions = await getAssessmentQuestions(testId);
+        if (Array.isArray(liveQuestions) && liveQuestions.length > 0) {
+          const mapped: Question[] = liveQuestions.map((q: any, idx: number) => ({
+            id: q.id || `q${idx + 1}`,
+            text: q.question_text || q.text,
+            options: q.options && Array.isArray(q.options) && q.options.length > 0
+              ? q.options
+              : ['Option A', 'Option B', 'Option C', 'Option D'],
+          }));
+          setQuestions(mapped);
+        }
+      } catch (err) {
+        console.warn('Unable to load assessment questions:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadQuestions();
+  }, [testId]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -65,8 +55,6 @@ export default function AssessmentRunnerPage() {
     }, 1000);
     return () => clearInterval(timer);
   }, []);
-
-  const questions = SAMPLE_QUESTIONS[testId] || SAMPLE_QUESTIONS.default;
 
   const handleSelect = (qId: string, opt: string) => {
     setAnswers((prev) => ({ ...prev, [qId]: opt }));
@@ -83,7 +71,7 @@ export default function AssessmentRunnerPage() {
       setResult({
         attemptId: `att-${Date.now()}`,
         assessmentId: testId,
-        userId: 'stu-8042',
+        userId: 'candidate-node',
         score: score,
         percentage: score,
         passed: score >= 70,
@@ -157,7 +145,7 @@ export default function AssessmentRunnerPage() {
           {/* Timer Banner */}
           <div className="flex items-center justify-between p-3 bg-bg-subtle border border-border-strong font-label-mono text-xs">
             <div className="flex items-center gap-2">
-              <span className="w-2 h-2 bg-accent-signal" />
+              <span className="w-2.5 h-2.5 bg-portal-primary" />
               <span className="font-bold text-fg-primary">ACTIVE EVALUATION SESSION</span>
             </div>
             <div className="flex items-center gap-1 text-fg-primary font-bold">
@@ -166,55 +154,73 @@ export default function AssessmentRunnerPage() {
             </div>
           </div>
 
-          {/* Question List */}
-          <div className="space-y-4">
-            {questions.map((q, idx) => (
-              <Card key={q.id} className="p-space-md bg-bg-surface space-y-3">
-                <div className="font-label-mono text-xs text-fg-muted uppercase">
-                  QUESTION {idx + 1} OF {questions.length}
-                </div>
-                <h3 className="font-headline-sm text-sm sm:text-base font-bold text-fg-primary">
-                  {q.text}
-                </h3>
-                <div className="space-y-2 pt-1">
-                  {q.options.map((opt) => {
-                    const isSelected = answers[q.id] === opt;
-                    return (
-                      <button
-                        key={opt}
-                        onClick={() => handleSelect(q.id, opt)}
-                        className={`w-full text-left p-3 font-body-sm text-xs sm:text-sm border transition-colors ${
-                          isSelected
-                            ? 'bg-accent-signal/15 border-border-strong text-fg-primary font-bold'
-                            : 'bg-bg-subtle border-border-hairline text-fg-secondary hover:border-border-strong'
-                        }`}
-                      >
-                        {opt}
-                      </button>
-                    );
-                  })}
-                </div>
-              </Card>
-            ))}
-          </div>
+          {loading ? (
+            <div className="p-12 text-center font-mono text-xs text-fg-muted bg-bg-surface border border-border-hairline">
+              Loading proctored questions docket...
+            </div>
+          ) : questions.length === 0 ? (
+            <div className="p-12 text-center bg-bg-surface border border-dashed border-border-strong space-y-3">
+              <h3 className="font-headline-sm text-sm font-bold uppercase text-fg-primary">No Questions Found for this Assessment</h3>
+              <p className="font-body-sm text-xs text-fg-muted max-w-md mx-auto">
+                The questions docket for this assessment ID is currently undergoing verification or not published.
+              </p>
+              <Link href="/student/assessment">
+                <Button variant="outline" size="sm">Back to Assessment Catalog</Button>
+              </Link>
+            </div>
+          ) : (
+            <>
+              {/* Question List */}
+              <div className="space-y-4">
+                {questions.map((q, idx) => (
+                  <Card key={q.id} className="p-space-md bg-bg-surface space-y-3">
+                    <div className="font-label-mono text-xs text-fg-muted uppercase">
+                      QUESTION {idx + 1} OF {questions.length}
+                    </div>
+                    <h3 className="font-headline-sm text-sm sm:text-base font-bold text-fg-primary">
+                      {q.text}
+                    </h3>
+                    <div className="space-y-2 pt-1">
+                      {q.options.map((opt) => {
+                        const isSelected = answers[q.id] === opt;
+                        return (
+                          <button
+                            key={opt}
+                            onClick={() => handleSelect(q.id, opt)}
+                            className={`w-full text-left p-3 font-body-sm text-xs sm:text-sm border transition-colors ${
+                              isSelected
+                                ? 'bg-portal-primary-soft border-portal-primary text-portal-primary font-bold'
+                                : 'bg-bg-subtle border-border-hairline text-fg-secondary hover:border-border-strong'
+                            }`}
+                          >
+                            {opt}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </Card>
+                ))}
+              </div>
 
-          {/* Action Bar */}
-          <div className="flex justify-between items-center pt-2">
-            <Link href="/student/assessment">
-              <Button variant="outline" size="sm">
-                Cancel Session
-              </Button>
-            </Link>
-            <Button
-              variant="signal"
-              size="md"
-              disabled={isSubmitting || Object.keys(answers).length === 0}
-              onClick={handleSubmit}
-            >
-              <Icon name="send" size={14} className="mr-1" />
-              {isSubmitting ? 'Evaluating Submission...' : 'Submit & Compute Score'}
-            </Button>
-          </div>
+              {/* Action Bar */}
+              <div className="flex justify-between items-center pt-2">
+                <Link href="/student/assessment">
+                  <Button variant="outline" size="sm">
+                    Cancel Session
+                  </Button>
+                </Link>
+                <Button
+                  variant="signal"
+                  size="md"
+                  disabled={isSubmitting || Object.keys(answers).length === 0}
+                  onClick={handleSubmit}
+                >
+                  <Icon name="send" size={14} className="mr-1" />
+                  {isSubmitting ? 'Evaluating Submission...' : 'Submit & Compute Score'}
+                </Button>
+              </div>
+            </>
+          )}
         </div>
       )}
     </NodePageShell>

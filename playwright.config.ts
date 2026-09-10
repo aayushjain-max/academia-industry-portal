@@ -53,7 +53,7 @@ export default defineConfig({
   ...(targetUrl.includes('localhost') || targetUrl.includes('127.0.0.1')
     ? {
         webServer: {
-          command: 'pnpm.cmd --filter web dev',
+          command: process.platform === 'win32' ? 'pnpm.cmd --filter web dev' : 'pnpm --filter web dev',
           url: 'http://localhost:3000',
           reuseExistingServer: true,
           timeout: 120 * 1000,

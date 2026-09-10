@@ -12,6 +12,11 @@ class SkillViewSet(viewsets.ModelViewSet):
     search_fields = ['name', 'description']
     filterset_fields = ['category']
 
+    def get_permissions(self):
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            return [permissions.IsAdminUser()]
+        return [permissions.IsAuthenticated()]
+
 class StudentSkillViewSet(viewsets.ModelViewSet):
     serializer_class = StudentSkillSerializer
     permission_classes = [permissions.IsAuthenticated]

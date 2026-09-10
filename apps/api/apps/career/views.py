@@ -6,6 +6,7 @@ from .serializers import CareerPathSerializer, CareerReadinessScoreSerializer, A
 from apps.students.models import StudentProfile
 from apps.users.models import User
 from common.constants.roles import UserRole
+from django.db.models import Avg
 
 class CareerPathViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = CareerPath.objects.all()
@@ -42,8 +43,8 @@ class CareerReadinessAPIView(APIView):
         skill_count = student_skills.count() if student_skills is not None else 0
         
         # Evidence factors
-        assessments_count = getattr(student_profile, 'assessments', None)
-        ass_count = assessments_count.count() if assessments_count is not None else 0
+        attempts_rel = getattr(student_profile, 'assessment_attempts', None)
+        ass_count = attempts_rel.count() if attempts_rel is not None else 0
         
         certs_count = getattr(student_profile, 'certifications', None)
         cert_num = certs_count.count() if certs_count is not None else 0
@@ -51,12 +52,15 @@ class CareerReadinessAPIView(APIView):
         projects_rel = getattr(student_profile, 'projects', None)
         proj_num = projects_rel.count() if projects_rel is not None else 0
 
-        tech_score = min(98, max(30, 40 + (skill_count * 8)))
-        ass_score = min(98, max(25, 35 + (ass_count * 12)))
-        cert_score = min(98, max(20, 30 + (cert_num * 15)))
-        proj_score = min(98, max(20, 35 + (proj_num * 15)))
-        soft_score = 75
-        exp_score = min(95, max(20, 30 + (proj_num * 10)))
+        # Soft skills factor from verified skills or assessments
+        soft_skills_qs = student_skills.filter(skill__category='SOFT_SKILLS') if student_skills is not None else []
+        soft_score = int(soft_skills_qs.aggregate(avg=Avg('verified_score'))['avg'] or 70) if hasattr(soft_skills_qs, 'aggregate') else 70
+
+        tech_score = min(100, max(40, 50 + (skill_count * 6)))
+        ass_score = min(100, max(40, 50 + (ass_count * 10)))
+        cert_score = min(100, max(40, 40 + (cert_num * 15)))
+        proj_score = min(100, max(40, 40 + (proj_num * 15)))
+        exp_score = min(100, max(40, 40 + (proj_num * 10)))
 
         overall = int(
             (tech_score * 0.30) +
@@ -108,32 +112,34 @@ class ActionPlanAPIView(APIView):
 
         action_plan = ActionPlan.objects.filter(student=student_profile).first()
         if not action_plan:
+            dept = getattr(student_profile, 'department', 'Engineering') or 'Engineering'
+            target_role = f"{dept} Specialist" if dept != 'Computer Science' else "Full Stack Software Engineer"
             action_plan = ActionPlan.objects.create(
                 student=student_profile,
-                target_role="Full Stack Engineer",
-                skill_gap="Cloud Infrastructure, Microservices Architecture",
+                target_role=target_role,
+                skill_gap=f"Core Competency Acceleration for {target_role}",
                 priority="HIGH",
                 steps=[
                     {
                         "id": "step-1",
-                        "title": "Complete Containerization & Docker Essentials",
-                        "description": "Master multi-stage container builds and production deployment.",
+                        "title": f"Complete Diagnostic Assessment for {dept}",
+                        "description": "Establish benchmark proficiency in core competencies.",
                         "status": "IN_PROGRESS",
-                        "resourceLink": "/student/learning"
+                        "resourceLink": "/student/assessments"
                     },
                     {
                         "id": "step-2",
-                        "title": "Build Distributed API Microservice",
-                        "description": "Implement asynchronous queues and Redis caching layer.",
+                        "title": "Build Applied Capstone Project",
+                        "description": "Demonstrate practical application and commit verifiable repository.",
                         "status": "NOT_STARTED",
                         "resourceLink": "/student/projects"
                     },
                     {
                         "id": "step-3",
-                        "title": "Take Backend Architecture Diagnostic Assessment",
-                        "description": "Achieve 80%+ benchmark to earn verified skill passport stamp.",
+                        "title": "Mint Cryptographic Skill Passport Stamp",
+                        "description": "Achieve benchmark score to verify credentials on-chain.",
                         "status": "NOT_STARTED",
-                        "resourceLink": "/student/assessments"
+                        "resourceLink": "/student/skill-passport"
                     }
                 ]
             )

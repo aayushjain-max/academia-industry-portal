@@ -3,11 +3,17 @@ import socket
 from pathlib import Path
 from datetime import timedelta
 
+from django.core.exceptions import ImproperlyConfigured
+
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-default-key-change-in-prod')
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
-ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', '*').split(',')
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-dev-local-only-key' if DEBUG else '')
+if not DEBUG and (not SECRET_KEY or 'insecure' in SECRET_KEY):
+    raise ImproperlyConfigured("SECRET_KEY must be set to a secure value in production (DEBUG=False).")
+
+ALLOWED_HOSTS = [h.strip() for h in os.getenv('DJANGO_ALLOWED_HOSTS', '*').split(',') if h.strip()]
+PORTAL_PUBLIC_URL = os.getenv('PUBLIC_APP_URL', os.getenv('NEXT_PUBLIC_APP_URL', 'http://localhost:3000')).rstrip('/')
 
 DJANGO_APPS = [
     'django.contrib.admin',
@@ -66,6 +72,7 @@ INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'common.middleware.security.SecurityHeadersMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -121,7 +128,7 @@ if postgres_available:
             'ENGINE': 'django.db.backends.postgresql',
             'NAME': os.getenv('POSTGRES_DB', 'academia_industry_db'),
             'USER': os.getenv('POSTGRES_USER', 'postgres'),
-            'PASSWORD': os.getenv('POSTGRES_PASSWORD', 'postgres_secure_password_here'),
+            'PASSWORD': os.getenv('POSTGRES_PASSWORD', ''),
             'HOST': POSTGRES_HOST,
             'PORT': str(POSTGRES_PORT),
         }
@@ -148,9 +155,9 @@ TIME_ZONE = 'Asia/Kolkata'
 USE_I18N = True
 USE_TZ = True
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-MEDIA_URL = 'media/'
+MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
@@ -163,8 +170,16 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
     ),
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': os.getenv('THROTTLE_RATE_ANON', '500/day'),
+        'user': os.getenv('THROTTLE_RATE_USER', '5000/day'),
+    },
     'DEFAULT_PAGINATION_CLASS': 'common.pagination.standard.StandardResultsSetPagination',
-    'PAGE_SIZE': 20,
+    'PAGE_SIZE': int(os.getenv('PAGE_SIZE', 20)),
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
     'EXCEPTION_HANDLER': 'common.exceptions.handlers.custom_exception_handler',
 }
@@ -216,5 +231,18 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = TIME_ZONE
-
 CORS_ALLOW_ALL_ORIGINS = DEBUG
+CORS_ALLOW_CREDENTIALS = True
+_env_cors = os.getenv('DJANGO_CORS_ALLOWED_ORIGINS', '')
+if _env_cors:
+    CORS_ALLOWED_ORIGINS = [o.strip() for o in _env_cors.split(',') if o.strip()]
+else:
+    CORS_ALLOWED_ORIGINS = [
+        'http://localhost:3000',
+        'http://127.0.0.1:3000',
+        'http://localhost:8000',
+        'http://127.0.0.1:8000',
+        'http://localhost:8001',
+        'http://127.0.0.1:8001',
+    ]
+

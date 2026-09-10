@@ -99,7 +99,7 @@ def run_tests():
 
     # Update application status
     print(f"\n[Test 8] Updating application {app_id} status to 'UNDER_REVIEW'...")
-    res = client.patch(f'/api/v1/applications/{app_id}/', {
+    res = client.post(f'/api/v1/applications/{app_id}/update_status/', {
         'status': 'UNDER_REVIEW',
         'feedback': 'Resume matches initial qualifications. Portfolio review underway.'
     }, format='json')

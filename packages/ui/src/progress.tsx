@@ -6,7 +6,7 @@ export interface DataProgressProps extends React.HTMLAttributes<HTMLDivElement> 
   value: number; // 0 to 100
   benchmark?: number; // 0 to 100
   statusText?: string;
-  variant?: 'success' | 'danger' | 'warning' | 'signal' | 'default';
+  variant?: 'success' | 'danger' | 'warning' | 'signal' | 'portal' | 'gradient' | 'brand' | 'default';
   showValues?: boolean;
 }
 
@@ -28,7 +28,10 @@ export const DataProgress: React.FC<DataProgressProps> = ({
     success: 'bg-status-success',
     danger: 'bg-status-danger',
     warning: 'bg-status-warning',
-    signal: 'bg-accent-signal',
+    signal: 'bg-portal-primary',
+    portal: 'bg-portal-primary',
+    gradient: 'bg-portal-gradient',
+    brand: 'bg-accent-signal',
   };
 
   return (

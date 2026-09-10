@@ -77,20 +77,43 @@ const ATTEMPTED_SKILL_TAGS = [
   'System Architecture',
 ];
 
+import { apiClient } from '@/lib/api/client';
+
 export default function StudentReadinessPage() {
   const [selectedRoleId, setSelectedRoleId] = useState<string>(CAREER_ROLES[0].id);
+  const [studentSkills, setStudentSkills] = useState<Record<string, number>>(STUDENT_SKILLS);
+
+  React.useEffect(() => {
+    async function loadReadiness() {
+      try {
+        const res: any = await apiClient.get('/career/readiness/');
+        if (res && res.skills) {
+          const mapped: Record<string, number> = { ...STUDENT_SKILLS };
+          res.skills.forEach((s: any) => {
+            if (s.name && s.proficiency_score) {
+              mapped[s.name.toLowerCase()] = s.proficiency_score / 10;
+            }
+          });
+          setStudentSkills(mapped);
+        }
+      } catch (err) {
+        console.warn('Using baseline client skills for readiness:', err);
+      }
+    }
+    loadReadiness();
+  }, []);
 
   const selectedRole = useMemo(() => {
     return CAREER_ROLES.find((r) => r.id === selectedRoleId) || CAREER_ROLES[0];
   }, [selectedRoleId]);
 
   const gapAnalysis: GapAnalysisResult = useMemo(() => {
-    return calculateSkillGaps(selectedRole, STUDENT_SKILLS);
-  }, [selectedRole]);
+    return calculateSkillGaps(selectedRole, studentSkills);
+  }, [selectedRole, studentSkills]);
 
   const readinessScore: ReadinessScoreResult = useMemo(() => {
-    return calculateReadinessIndex(selectedRole, STUDENT_SKILLS, ATTEMPTED_SKILL_TAGS);
-  }, [selectedRole]);
+    return calculateReadinessIndex(selectedRole, studentSkills, ATTEMPTED_SKILL_TAGS);
+  }, [selectedRole, studentSkills]);
 
   const actionPlan: ActionPlanResult = useMemo(() => {
     return generateActionPlan(selectedRole.title, gapAnalysis.gaps);
@@ -179,7 +202,7 @@ export default function StudentReadinessPage() {
 
         <div className="text-right">
           <span className="font-label-mono text-[10px] text-fg-muted block">READINESS TIER</span>
-          <span className="font-label-mono text-xs font-bold px-2 py-0.5 bg-accent-signal text-fg-primary border border-border-strong">
+          <span className="font-label-mono text-xs font-bold px-2 py-0.5 bg-portal-primary text-portal-on-primary border border-border-strong">
             {readinessScore.tier}
           </span>
         </div>
@@ -277,7 +300,7 @@ export default function StudentReadinessPage() {
                 <div key={idx} className="p-3 border border-border-hairline bg-bg-canvas space-y-2">
                   <div className="flex items-center justify-between flex-wrap gap-2 font-label-mono text-xs">
                     <span className="font-bold text-fg-primary uppercase flex items-center gap-1.5">
-                      <span className="material-symbols-outlined text-[16px] text-accent-signal">flag</span>
+                      <span className="material-symbols-outlined text-[16px] text-portal-primary">flag</span>
                       {item.focus_area}
                     </span>
                     <span className="text-fg-muted">EST: <strong>{item.estimated_time_to_close}</strong></span>

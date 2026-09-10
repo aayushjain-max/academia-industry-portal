@@ -1,234 +1,401 @@
 'use client';
 
-import React, { useState } from 'react';
-import Link from 'next/link';
+import React, { useState, useEffect } from 'react';
+import { NodePageShell } from '@/components/dashboard/node-page-shell';
+import { Button, Badge, Card } from '@portal/ui';
+import { Icon } from '@/components/ui/icon';
+import {
+  getGrantApplications,
+  submitGrantApplication,
+  GrantApplication,
+  getMyAcademicianProfile,
+} from '@/features/academicians/api';
+import { Loader2, Plus, X, Search, FileText, CheckCircle2, Clock, XCircle, AlertCircle } from 'lucide-react';
 
 export default function AcademicianApplicationsPage() {
-  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [selectedStatus, setSelectedStatus] = useState('ALL');
+  const [search, setSearch] = useState('');
+  const [applications, setApplications] = useState<GrantApplication[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [facultyName, setFacultyName] = useState('Faculty Principal Investigator');
 
-  const dockets = [
-    {
-      id: '#DK-FAC-992',
-      title: 'Edge AI ASIC Design & Low-Power Inference Sabbatical',
-      org: 'TechNova Semiconductor Research Center // Bengaluru',
-      type: 'FACULTY SABBATICAL',
-      stipend: '₹1,20,000 / mo',
-      duration: '6 Months (Deputation)',
-      stage: 'DEAN NOC COUNTERSIGN PENDING',
-      stageColor: 'bg-status-warning text-fg-primary font-bold',
-      actionNeeded: true,
-      pi: 'Dr. V. Ramanathan (EmpID: F-4081)',
-      domain: 'VLSI & Edge Neural Systems',
-      mouStatus: 'INSTITUTIONAL MOU SIGNED',
-    },
-    {
-      id: '#DK-FAC-844',
-      title: 'ISRO Micro-Satellite Payload Signal Processing Consultancy',
-      org: 'ISRO Telemetry & Tracking Network (ISTRAC) // Ahmedabad',
-      type: 'FUNDED CONSULTANCY',
-      stipend: '₹18,50,000 Grant',
-      duration: '1 Year Retainer',
-      stage: 'APPROVED & FUNDED',
-      stageColor: 'bg-status-success text-white font-bold',
-      actionNeeded: false,
-      pi: 'Dr. V. Ramanathan & Dr. N. Ramanathan',
-      domain: 'DSP & Space Telematics',
-      mouStatus: 'STATUTORY CLEARANCE GRANTED',
-    },
-    {
-      id: '#DK-FAC-710',
-      title: 'AICTE National Faculty Development Program on Quantum Computing',
-      org: 'AICTE Training & Learning (ATAL) Academy // New Delhi',
-      type: 'AICTE FDP LEAD',
-      stipend: '₹3,50,000 Honorarium',
-      duration: '2 Weeks (Intensive)',
-      stage: 'SHORTLISTED FOR DISPATCH',
-      stageColor: 'bg-neutral-900 text-accent-signal font-bold',
-      actionNeeded: false,
-      pi: 'Dr. V. Ramanathan (Course Director)',
-      domain: 'Quantum Algorithms & Qiskit',
-      mouStatus: 'CENTRAL ALLOCATION CONFIRMED',
-    },
-  ];
+  // New Application Modal
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [formData, setFormData] = useState({
+    project_title: '',
+    requested_amount: '',
+    executive_summary: '',
+  });
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const [appsRes, profileRes] = await Promise.allSettled([
+        getGrantApplications(),
+        getMyAcademicianProfile(),
+      ]);
+
+      if (appsRes.status === 'fulfilled') {
+        setApplications(appsRes.value.results || []);
+      }
+      if (profileRes.status === 'fulfilled') {
+        const p = profileRes.value;
+        const name = `${p.first_name || ''} ${p.last_name || ''}`.trim() || p.email || 'Principal Investigator';
+        setFacultyName(name);
+      }
+    } catch (err: any) {
+      console.error('Failed to load grant applications:', err);
+      setError('Failed to synchronize grant applications ledger.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const handleCreateProposal = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.project_title || !formData.requested_amount) {
+      setSubmitError('Project title and requested amount are required.');
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+      setSubmitError(null);
+      await submitGrantApplication({
+        project_title: formData.project_title,
+        requested_amount: Number(formData.requested_amount),
+        executive_summary: formData.executive_summary,
+      });
+      setSubmitSuccess(true);
+      setTimeout(() => {
+        setIsModalOpen(false);
+        setSubmitSuccess(false);
+        setFormData({ project_title: '', requested_amount: '', executive_summary: '' });
+        loadData();
+      }, 1500);
+    } catch (err: any) {
+      setSubmitError(err?.message || 'Failed to submit proposal.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const totalRequested = applications.reduce((acc, a) => acc + (Number(a.requested_amount) || 0), 0);
+  const approvedCount = applications.filter((a) => a.status === 'APPROVED').length;
+  const underReviewCount = applications.filter((a) => a.status === 'UNDER_REVIEW' || a.status === 'SUBMITTED').length;
+
+  const filtered = applications.filter((app) => {
+    const matchSearch =
+      app.project_title.toLowerCase().includes(search.toLowerCase()) ||
+      (app.grant_opportunity_details?.funding_agency && app.grant_opportunity_details.funding_agency.toLowerCase().includes(search.toLowerCase()));
+    if (selectedStatus === 'ALL') return matchSearch;
+    return matchSearch && app.status === selectedStatus;
+  });
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'APPROVED':
+        return <Badge variant="success">APPROVED & SANCTIONED</Badge>;
+      case 'UNDER_REVIEW':
+        return <Badge variant="warning">UNDER PEER REVIEW</Badge>;
+      case 'SUBMITTED':
+        return <Badge variant="signal">SUBMITTED</Badge>;
+      case 'REJECTED':
+        return <Badge variant="outline">REVISION REQUESTED</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
+  };
 
   return (
-    <div className="space-y-space-lg">
-      {/* Header Docket Title */}
-      <div className="pb-space-md border-b border-border-strong flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 font-label-mono text-xs text-fg-muted uppercase">
-            <span>PORTAL CORE // NODE: FAC-8042</span>
-            <span className="text-border-hairline">|</span>
-            <span className="text-status-success font-semibold">NEXUS-SOUTH-4</span>
-          </div>
-          <h1 className="font-headline-lg text-headline-lg text-fg-primary uppercase tracking-tight mt-1">
-            Faculty Opportunities &amp; Application Tracking
-          </h1>
-          <p className="text-body-md text-fg-muted">
-            Institutional governance and tracking docket for faculty sabbaticals, industrial consultancies, and AICTE programs.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2 shrink-0">
-          <button className="px-space-md py-2 bg-accent-signal text-fg-primary font-label-mono text-xs uppercase font-bold hover:bg-accent-signal-hover transition-colors border border-border-strong shadow-[2px_2px_0px_0px_#18181B]">
+    <NodePageShell
+      nodeId="FAC-PORTAL // APPLICATIONS"
+      nodeStatus="LEDGER SYNCHRONIZED"
+      category="RESEARCH GRANTS & PROPOSAL TRACKING"
+      title="Grant Applications & Proposals Docket"
+      description="Track and manage submitted research grant applications, institutional endorsements, review statuses, and funding sanctions."
+      actions={
+        <div className="flex items-center gap-2">
+          <Button variant="signal" size="sm" onClick={() => setIsModalOpen(true)}>
+            <Plus size={14} className="mr-1" />
             Propose New Docket
-          </button>
+          </Button>
+          <Button variant="outline" size="sm" onClick={loadData}>
+            <Icon name="refresh" size={14} className="mr-1" />
+            Refresh
+          </Button>
         </div>
-      </div>
-
-      {/* 4 Stat Overview Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-space-md">
-        <div className="bg-bg-surface border border-border-strong p-space-md flex flex-col justify-between h-32">
-          <span className="font-label-mono text-[10px] text-fg-muted uppercase">01 // TOTAL OPPORTUNITIES</span>
-          <div>
-            <div className="flex items-baseline gap-2">
-              <span className="font-metric-tabular text-3xl font-bold text-fg-primary tnum">28</span>
-              <span className="font-label-mono text-xs text-status-success font-bold">+03 NEW</span>
-            </div>
-            <span className="font-body-sm text-[11px] text-fg-muted block mt-0.5">Vetted by National Board</span>
-          </div>
-        </div>
-
-        <div className="bg-bg-surface border border-border-strong p-space-md flex flex-col justify-between h-32">
-          <span className="font-label-mono text-[10px] text-fg-muted uppercase">02 // ACTIVE APPLICATIONS</span>
-          <div>
-            <div className="flex items-baseline gap-2">
-              <span className="font-metric-tabular text-3xl font-bold text-status-warning tnum">04</span>
-              <span className="font-label-mono text-xs text-status-warning font-bold">1 ACTION REQ</span>
-            </div>
-            <span className="font-body-sm text-[11px] text-fg-muted block mt-0.5">Dean NOC countersign required</span>
-          </div>
-        </div>
-
-        <div className="bg-bg-surface border border-border-strong p-space-md flex flex-col justify-between h-32">
-          <span className="font-label-mono text-[10px] text-fg-muted uppercase">03 // APPROVED MOUS</span>
-          <div>
-            <div className="flex items-baseline gap-2">
-              <span className="font-metric-tabular text-3xl font-bold text-fg-primary tnum">06</span>
-              <span className="font-label-mono text-xs text-status-success font-bold">ACTIVE</span>
-            </div>
-            <span className="font-body-sm text-[11px] text-fg-muted block mt-0.5">Tier-1 PSUs &amp; Global AI</span>
-          </div>
-        </div>
-
-        <div className="bg-bg-surface border border-accent-signal p-space-md flex flex-col justify-between h-32">
-          <span className="font-label-mono text-[10px] text-fg-muted uppercase">04 // CUMULATIVE GRANTS</span>
-          <div>
-            <div className="flex items-baseline gap-2">
-              <span className="font-metric-tabular text-3xl font-bold text-fg-primary tnum">₹1.85 Cr</span>
-              <span className="font-label-mono text-xs text-fg-muted">39% USED</span>
-            </div>
-            <span className="font-body-sm text-[11px] text-fg-muted block mt-0.5">Ongoing research dockets</span>
-          </div>
-        </div>
-      </div>
-
+      }
+      kpis={[
+        {
+          label: 'Total Proposals',
+          value: String(applications.length),
+          delta: 'ALL TIME',
+          deltaType: 'neutral',
+          subtext: 'Submitted Dockets',
+          icon: 'article',
+        },
+        {
+          label: 'In Active Review',
+          value: String(underReviewCount),
+          delta: 'PENDING PEER REVIEW',
+          deltaType: underReviewCount > 0 ? 'warning' : 'neutral',
+          subtext: 'Dean & Agency Committees',
+          icon: 'clock',
+        },
+        {
+          label: 'Sanctioned & Awarded',
+          value: String(approvedCount),
+          delta: `${approvedCount} GRANTS`,
+          deltaType: 'success',
+          subtext: 'Institutional Sanctions',
+          icon: 'verified',
+        },
+        {
+          label: 'Total Capital Requested',
+          value: totalRequested > 0 ? `₹${(totalRequested / 10000000).toFixed(2)} Cr` : '₹0.00',
+          delta: 'PORTFOLIO SUM',
+          deltaType: 'neutral',
+          subtext: 'Across All Proposals',
+          icon: 'token',
+        },
+      ]}
+    >
       {/* Category Tabs & Search Bar */}
       <div className="bg-bg-surface border border-border-strong">
         <div className="border-b border-border-hairline flex items-center overflow-x-auto font-mono text-xs">
-          {['All', 'Faculty Sabbaticals', 'Industrial Training', 'AICTE FDPs', 'Funded Consultancy', 'Joint Research'].map((tab) => (
+          {['ALL', 'SUBMITTED', 'UNDER_REVIEW', 'APPROVED', 'REJECTED'].map((tab) => (
             <button
               key={tab}
               type="button"
-              onClick={() => setSelectedCategory(tab)}
+              onClick={() => setSelectedStatus(tab)}
               className={`px-space-md py-3 uppercase whitespace-nowrap transition-colors ${
-                selectedCategory === tab
-                  ? 'bg-fg-primary text-bg-surface font-bold border-b-2 border-accent-signal'
+                selectedStatus === tab
+                  ? 'bg-fg-primary text-bg-surface font-bold border-b-2 border-portal-primary'
                   : 'text-fg-muted hover:text-fg-primary hover:bg-bg-subtle'
               }`}
             >
-              {tab}
+              {tab === 'ALL' ? `All Proposals (${applications.length})` : tab.replace('_', ' ')}
             </button>
           ))}
         </div>
 
         <div className="p-space-md flex flex-col md:flex-row gap-space-sm items-center">
           <div className="flex-1 w-full flex items-center bg-bg-canvas border border-border-hairline px-3 py-2">
-            <span className="material-symbols-outlined text-fg-muted text-[18px] mr-2">search</span>
+            <Search size={16} className="text-fg-muted mr-2" />
             <input
               type="text"
-              placeholder="Search by docket code, discipline, or corporate partner..."
+              placeholder="Search by proposal title or sponsoring agency..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
               className="w-full bg-transparent border-0 outline-none text-xs font-mono text-fg-primary placeholder:text-fg-muted"
             />
-          </div>
-          <div className="flex gap-2 w-full md:w-auto">
-            <select className="bg-bg-surface border border-border-hairline px-3 py-2 font-mono text-xs uppercase text-fg-primary">
-              <option>Domain: All Engineering Disciplines</option>
-              <option>Computer Science &amp; VLSI</option>
-              <option>Aerospace &amp; Defense</option>
-            </select>
           </div>
         </div>
       </div>
 
-      {/* Docket Records List */}
-      <div className="space-y-space-md">
-        {dockets.map((docket) => (
-          <div
-            key={docket.id}
-            className="bg-bg-surface border border-border-strong p-space-lg space-y-space-md hover:shadow-[3px_3px_0px_0px_#18181B] transition-all"
-          >
-            <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-space-sm">
-              <div>
-                <div className="flex flex-wrap items-center gap-2 mb-1.5">
-                  <span className="font-mono text-xs px-2 py-0.5 bg-bg-subtle border border-border-hairline font-bold">
-                    {docket.id}
-                  </span>
-                  <span className="font-mono text-xs px-2 py-0.5 bg-accent-signal text-fg-primary font-bold border border-border-strong">
-                    {docket.type}
-                  </span>
-                  <span className={`font-mono text-xs px-2 py-0.5 ${docket.stageColor}`}>
-                    {docket.stage}
-                  </span>
+      {/* Applications Records List */}
+      {loading ? (
+        <div className="p-12 text-center bg-bg-surface border border-border-strong">
+          <Loader2 className="w-8 h-8 animate-spin text-portal-primary mx-auto mb-3" />
+          <p className="font-mono text-xs uppercase text-fg-muted">Loading Application Dockets...</p>
+        </div>
+      ) : error ? (
+        <div className="p-8 text-center bg-bg-surface border border-status-danger/30 text-status-danger">
+          <p className="font-mono text-sm font-bold mb-2">{error}</p>
+          <Button variant="outline" size="sm" onClick={loadData}>Retry</Button>
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="p-12 text-center bg-bg-surface border border-border-hairline text-fg-muted">
+          <FileText className="w-10 h-10 mx-auto mb-2 text-fg-muted opacity-40" />
+          <p className="font-headline-sm text-fg-primary font-bold">No Applications Found</p>
+          <p className="font-body-sm mt-1 text-xs">No grant application dockets match the current filter criteria.</p>
+          <Button variant="signal" size="sm" className="mt-4" onClick={() => setIsModalOpen(true)}>
+            Submit Your First Proposal
+          </Button>
+        </div>
+      ) : (
+        <div className="space-y-space-md">
+          {filtered.map((item) => {
+            const requestedFormatted = item.requested_amount
+              ? `₹${(Number(item.requested_amount) / 100000).toLocaleString()} L`
+              : '₹0';
+            const submissionDate = item.submitted_at || item.created_at
+              ? new Date(item.submitted_at || item.created_at).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })
+              : 'Recently';
+
+            return (
+              <div
+                key={item.id}
+                className="bg-bg-surface border border-border-strong p-space-lg space-y-space-md hover:shadow-[3px_3px_0px_0px_#18181B] transition-all"
+              >
+                <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-space-sm">
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                      <span className="font-mono text-xs px-2 py-0.5 bg-bg-subtle border border-border-hairline font-bold">
+                        #DK-{item.id.slice(0, 8).toUpperCase()}
+                      </span>
+                      {getStatusBadge(item.status)}
+                      <span className="font-mono text-xs text-fg-muted">
+                        SUBMITTED: {submissionDate}
+                      </span>
+                    </div>
+                    <h3 className="font-headline-sm text-body-lg font-bold text-fg-primary">
+                      {item.project_title}
+                    </h3>
+                    {item.grant_opportunity_details?.funding_agency && (
+                      <p className="font-mono text-xs text-fg-secondary mt-0.5">
+                        Sponsoring Body: {item.grant_opportunity_details.funding_agency}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="lg:text-right shrink-0">
+                    <span className="font-label-mono text-[10px] text-fg-muted uppercase block">
+                      REQUESTED GRANT
+                    </span>
+                    <span className="font-metric-tabular text-xl font-bold text-fg-primary tnum">
+                      {requestedFormatted}
+                    </span>
+                  </div>
                 </div>
-                <h3 className="font-headline-sm text-body-lg font-bold text-fg-primary">
-                  {docket.title}
-                </h3>
-                <p className="font-mono text-xs text-fg-secondary mt-0.5">{docket.org}</p>
-              </div>
 
-              <div className="lg:text-right shrink-0">
-                <span className="font-label-mono text-[10px] text-fg-muted uppercase block">HONORARIUM / GRANT</span>
-                <span className="font-metric-tabular text-xl font-bold text-fg-primary tnum">{docket.stipend}</span>
-                <span className="font-mono text-xs text-fg-muted block">{docket.duration}</span>
-              </div>
-            </div>
-
-            <div className="p-3 bg-bg-canvas border border-border-hairline font-mono text-xs grid grid-cols-1 sm:grid-cols-3 gap-2">
-              <div>
-                <span className="text-fg-muted text-[10px] uppercase block">PRINCIPAL INVESTIGATOR</span>
-                <span className="text-fg-primary font-bold">{docket.pi}</span>
-              </div>
-              <div>
-                <span className="text-fg-muted text-[10px] uppercase block">CORE DISCIPLINE</span>
-                <span className="text-fg-primary">{docket.domain}</span>
-              </div>
-              <div>
-                <span className="text-fg-muted text-[10px] uppercase block">STATUTORY GOVERNANCE</span>
-                <span className="text-status-success font-semibold">{docket.mouStatus}</span>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
-              <span className="font-mono text-xs text-fg-muted">
-                INSTITUTION: IIT BOMBAY // DEAN ACADEMIC CLEARANCE PROTOCOL
-              </span>
-
-              <div className="flex gap-2">
-                {docket.actionNeeded && (
-                  <button className="px-space-md py-1.5 bg-status-warning text-fg-primary font-mono text-xs uppercase font-bold border border-border-strong">
-                    Sign Dean NOC (Awaiting)
-                  </button>
+                {item.executive_summary && (
+                  <p className="font-body-sm text-xs text-fg-secondary border-l-2 border-border-strong pl-3 py-1">
+                    {item.executive_summary}
+                  </p>
                 )}
-                <button className="px-space-md py-1.5 bg-fg-primary text-bg-surface font-mono text-xs uppercase hover:bg-neutral-800 transition-colors border border-border-strong">
-                  View Full Dossier
-                </button>
+
+                <div className="p-3 bg-bg-canvas border border-border-hairline font-mono text-xs grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  <div>
+                    <span className="text-fg-muted text-[10px] uppercase block">PRINCIPAL INVESTIGATOR</span>
+                    <span className="text-fg-primary font-bold">{facultyName}</span>
+                  </div>
+                  <div>
+                    <span className="text-fg-muted text-[10px] uppercase block">CALL TYPE</span>
+                    <span className="text-fg-primary">
+                      {item.grant_opportunity_details ? item.grant_opportunity_details.title : 'Direct PI Proposal'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-fg-muted text-[10px] uppercase block">STATUS &amp; FEEDBACK</span>
+                    <span className="text-fg-primary">
+                      {item.review_notes || (item.status === 'APPROVED' ? 'Sanction Confirmed' : 'In Docket Processing')}
+                    </span>
+                  </div>
+                </div>
               </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Propose Docket Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-bg-surface border-2 border-border-strong w-full max-w-xl shadow-[6px_6px_0px_0px_#18181B] max-h-[90vh] flex flex-col">
+            <div className="p-4 border-b border-border-hairline flex items-center justify-between bg-bg-subtle">
+              <div className="flex items-center gap-2">
+                <Badge variant="signal">NEW GRANT DOCKET</Badge>
+                <span className="font-mono text-xs text-fg-muted">FACULTY PROPOSAL</span>
+              </div>
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="text-fg-muted hover:text-fg-primary p-1"
+              >
+                <X size={18} />
+              </button>
             </div>
+
+            <form onSubmit={handleCreateProposal} className="p-6 space-y-4 overflow-y-auto">
+              {submitError && (
+                <div className="p-3 bg-status-danger/10 border border-status-danger text-status-danger text-xs font-mono">
+                  {submitError}
+                </div>
+              )}
+              {submitSuccess && (
+                <div className="p-3 bg-status-success/10 border border-status-success text-status-success text-xs font-mono font-bold">
+                  ✓ Proposal docket submitted successfully!
+                </div>
+              )}
+
+              <div>
+                <label className="block font-mono text-xs uppercase text-fg-primary font-bold mb-1">
+                  Research Project Title *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Next-Gen Fault-Tolerant Edge Computing"
+                  value={formData.project_title}
+                  onChange={(e) => setFormData({ ...formData, project_title: e.target.value })}
+                  className="w-full bg-bg-canvas border border-border-strong px-3 py-2 text-xs font-mono text-fg-primary focus:outline-none focus:ring-2 focus:ring-border-strong"
+                />
+              </div>
+
+              <div>
+                <label className="block font-mono text-xs uppercase text-fg-primary font-bold mb-1">
+                  Requested Amount (INR) *
+                </label>
+                <input
+                  type="number"
+                  required
+                  min={10000}
+                  placeholder="e.g. 2000000"
+                  value={formData.requested_amount}
+                  onChange={(e) => setFormData({ ...formData, requested_amount: e.target.value })}
+                  className="w-full bg-bg-canvas border border-border-strong px-3 py-2 text-xs font-mono text-fg-primary focus:outline-none focus:ring-2 focus:ring-border-strong"
+                />
+              </div>
+
+              <div>
+                <label className="block font-mono text-xs uppercase text-fg-primary font-bold mb-1">
+                  Executive Summary &amp; Scope
+                </label>
+                <textarea
+                  rows={4}
+                  placeholder="Briefly state objectives, key milestones, and anticipated academic/industrial impact..."
+                  value={formData.executive_summary}
+                  onChange={(e) => setFormData({ ...formData, executive_summary: e.target.value })}
+                  className="w-full bg-bg-canvas border border-border-strong px-3 py-2 text-xs font-mono text-fg-primary focus:outline-none focus:ring-2 focus:ring-border-strong"
+                />
+              </div>
+
+              <div className="pt-4 border-t border-border-hairline flex items-center justify-end gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={submitting}
+                  onClick={() => setIsModalOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" variant="signal" size="sm" disabled={submitting}>
+                  {submitting ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" /> Submitting...
+                    </>
+                  ) : (
+                    'Submit Proposal Docket'
+                  )}
+                </Button>
+              </div>
+            </form>
           </div>
-        ))}
-      </div>
-    </div>
+        </div>
+      )}
+    </NodePageShell>
   );
 }
+
 

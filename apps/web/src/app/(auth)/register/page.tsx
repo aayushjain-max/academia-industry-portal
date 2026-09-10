@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { registerUser } from '@/features/auth/api';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -13,6 +14,8 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [entropyPercent, setEntropyPercent] = useState(72);
   const [entropyLabel, setEntropyLabel] = useState('STANDARD (128-BIT)');
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const roleMap: Record<string, { label: string; route: string; port: string }> = {
     Student: { label: 'STUDENT NODE', route: '/student/dashboard', port: '8042' },
@@ -35,10 +38,42 @@ export default function RegisterPage() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    router.push(roleMap[selectedRole]?.route || '/student/dashboard');
+    if (password !== confirmPassword) {
+      setErrorMessage('Passwords do not match.');
+      return;
+    }
+
+    setIsLoading(true);
+    setErrorMessage(null);
+
+    const roleMapping: Record<string, 'STUDENT' | 'INDUSTRY' | 'INSTITUTION_ADMIN' | 'ACADEMICIAN'> = {
+      Student: 'STUDENT',
+      Academician: 'ACADEMICIAN',
+      Industry: 'INDUSTRY',
+      Institution: 'INSTITUTION_ADMIN',
+    };
+    const mappedRole = roleMapping[selectedRole] || 'STUDENT';
+    const destination = roleMap[selectedRole]?.route || '/student/dashboard';
+
+    try {
+      await registerUser({
+        email,
+        password,
+        first_name: name.split(' ')[0] || 'User',
+        last_name: name.split(' ').slice(1).join(' ') || '',
+        role: mappedRole,
+      });
+      router.push(destination);
+    } catch (err: any) {
+      const msg = err?.message || 'Registration failed. Please check your information.';
+      setErrorMessage(msg);
+    } finally {
+      setIsLoading(false);
+    }
   };
+
 
   return (
     <main className="flex-1 w-full max-w-[1440px] mx-auto grid grid-cols-1 lg:grid-cols-12 min-h-[calc(100vh-56px)]">
@@ -253,11 +288,18 @@ export default function RegisterPage() {
               </label>
             </div>
 
+            {errorMessage && (
+              <div className="p-3 bg-red-500/10 border border-red-500/30 text-red-600 text-xs font-label-mono uppercase">
+                {errorMessage}
+              </div>
+            )}
+
             <button
               type="submit"
-              className="w-full bg-accent-signal hover:bg-accent-signal-hover text-zinc-950 font-headline-sm text-[14px] uppercase tracking-wider py-3.5 px-4 flex items-center justify-center gap-2 border border-border-strong font-bold shadow-[2px_2px_0px_0px_#18181B] active:opacity-90 transition-all duration-150"
+              disabled={isLoading}
+              className="w-full bg-accent-signal hover:bg-accent-signal-hover disabled:opacity-50 text-zinc-950 font-headline-sm text-[14px] uppercase tracking-wider py-3.5 px-4 flex items-center justify-center gap-2 border border-border-strong font-bold shadow-[2px_2px_0px_0px_#18181B] active:opacity-90 transition-all duration-150"
             >
-              <span>REGISTER VERIFIED LEDGER NODE</span>
+              <span>{isLoading ? 'REGISTERING...' : 'REGISTER VERIFIED LEDGER NODE'}</span>
               <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
             </button>
 

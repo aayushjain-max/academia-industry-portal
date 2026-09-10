@@ -18,25 +18,27 @@ class CareerGuidanceService:
         if profile_data:
             return calculate_readiness_score(profile_data)
 
-        # Build profile payload from provided inputs or compute
-        tech = technical_score if technical_score is not None else 65
-        soft = soft_skills_score if soft_skills_score is not None else 70
-        proj = projects_score if projects_score is not None else 50
-        cert = certifications_score if certifications_score is not None else 40
-        exp = experience_score if experience_score is not None else 40
+        has_data = any(x is not None for x in [technical_score, soft_skills_score, projects_score, certifications_score, experience_score])
+        
+        tech = technical_score if technical_score is not None else 0
+        soft = soft_skills_score if soft_skills_score is not None else 0
+        proj = projects_score if projects_score is not None else 0
+        cert = certifications_score if certifications_score is not None else 0
+        exp = experience_score if experience_score is not None else 0
 
         student_profile = {
-            "skills": [{"name": "Technical Assessment", "score": tech, "proficiency": "ADVANCED" if tech >= 70 else "INTERMEDIATE"}],
-            "assessments": [{"score": tech}],
+            "skills": [{"name": "Technical Assessment", "score": tech, "proficiency": "ADVANCED" if tech >= 70 else "INTERMEDIATE"}] if tech > 0 else [],
+            "assessments": [{"score": tech}] if tech > 0 else [],
             "projects": [{"name": "Project"} for _ in range(max(0, int(proj / 35)))],
             "certifications": [{"name": "Cert"} for _ in range(max(0, int(cert / 40)))],
             "experience_months": int((exp / 100) * 12),
             "soft_skills_score": soft,
-            "career_alignment_score": 75.0
+            "career_alignment_score": 50.0 if has_data else 0.0
         }
 
         res = calculate_readiness_score(student_profile)
         res["user_id"] = user_id
+        res["has_sufficient_data"] = has_data
         return res
 
     @staticmethod

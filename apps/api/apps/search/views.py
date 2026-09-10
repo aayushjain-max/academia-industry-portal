@@ -11,9 +11,7 @@ from apps.institutions.models import InstitutionProfile
 from apps.academicians.models import AcademicianProfile
 from django.db.models import Q
 
-class SearchViewSet(viewsets.ModelViewSet):
-    queryset = SearchHistory.objects.all()
-    serializer_class = SearchHistorySerializer
+class SearchViewSet(viewsets.ViewSet):
     permission_classes = [permissions.AllowAny]
 
     def list(self, request, *args, **kwargs):
@@ -43,9 +41,9 @@ class SearchViewSet(viewsets.ModelViewSet):
             "academicians": []
         }
 
-        # 1. Opportunities
+        # 1. Opportunities (with select_related and prefetch_related)
         if not cat or cat in ['opportunities', 'jobs', 'internships']:
-            opps = Opportunity.objects.filter(
+            opps = Opportunity.objects.select_related('industry').prefetch_related('required_skills').filter(
                 Q(title__icontains=q) | Q(description__icontains=q) | Q(industry__company_name__icontains=q),
                 status='ACTIVE'
             )[:10]
@@ -76,11 +74,11 @@ class SearchViewSet(viewsets.ModelViewSet):
         if not cat or cat in ['students', 'talents']:
             students = StudentProfile.objects.filter(
                 Q(headline__icontains=q) | Q(institution_name__icontains=q) | Q(bio__icontains=q)
-            )[:10]
+            ).select_related('user').prefetch_related('skills__skill')[:10]
             for st in students:
                 results["students"].append({
                     "id": str(st.id),
-                    "name": f"{st.user.first_name} {st.user.last_name}".strip() or st.user.username,
+                    "name": f"{st.user.first_name} {st.user.last_name}".strip() or st.user.email,
                     "headline": st.headline,
                     "college": st.institution_name,
                     "skills": [ss.skill.name for ss in st.skills.all()]
@@ -96,7 +94,7 @@ class SearchViewSet(viewsets.ModelViewSet):
                     "id": str(p.id),
                     "title": p.title,
                     "type": p.project_type,
-                    "technologies": p.technologies
+                    "technologies": p.skills_used
                 })
 
         # 5. Institutions
@@ -117,11 +115,11 @@ class SearchViewSet(viewsets.ModelViewSet):
         if not cat or cat in ['academicians', 'faculty', 'professors']:
             acad = AcademicianProfile.objects.filter(
                 Q(department__icontains=q) | Q(designation__icontains=q) | Q(areas_of_expertise__icontains=q)
-            )[:10]
+            ).select_related('user')[:10]
             for a in acad:
                 results["academicians"].append({
                     "id": str(a.id),
-                    "name": f"{a.user.first_name} {a.user.last_name}".strip() or a.user.username,
+                    "name": f"{a.user.first_name} {a.user.last_name}".strip() or a.user.email,
                     "department": a.department,
                     "designation": a.designation,
                     "expertise": a.areas_of_expertise

@@ -22,6 +22,7 @@ export interface CurriculumGapChartProps {
   data?: CurriculumGapItem[];
   className?: string;
   height?: number;
+  accentColor?: string;
 }
 
 const defaultData: CurriculumGapItem[] = [
@@ -40,8 +41,8 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     const gap = supply - demand;
 
     return (
-      <div className="bg-fg-primary text-bg-surface border border-border-strong p-2.5 shadow-[2px_2px_0px_0px_#18181B] font-mono text-xs">
-        <span className="font-bold text-accent-signal block mb-1 uppercase tracking-wider">
+      <div className="bg-fg-primary text-bg-surface border border-border-strong p-2.5 shadow-[2px_2px_0px_0px_var(--portal-primary,#10B981)] font-mono text-xs">
+        <span className="font-bold text-portal-primary block mb-1 uppercase tracking-wider">
           {label}
         </span>
         <div className="flex justify-between gap-6 py-0.5">
@@ -50,7 +51,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
         </div>
         <div className="flex justify-between gap-6 py-0.5">
           <span className="text-neutral-400">Industry Demand:</span>
-          <span className="font-bold text-accent-signal tnum">{demand}%</span>
+          <span className="font-bold text-portal-primary tnum">{demand}%</span>
         </div>
         <div className="flex justify-between gap-6 pt-1 border-t border-neutral-700 mt-1">
           <span className="text-neutral-400">Deficit Delta:</span>
@@ -68,12 +69,13 @@ export const CurriculumGapChart: React.FC<CurriculumGapChartProps> = ({
   data = defaultData,
   className = '',
   height = 300,
+  accentColor = '#10B981',
 }) => {
   return (
     <div className={`w-full bg-bg-surface border border-border-strong p-space-md ${className}`}>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-space-xs border-b border-border-hairline mb-space-sm gap-2">
         <div className="flex items-center gap-2">
-          <span className="w-2.5 h-2.5 bg-accent-signal border border-border-strong" />
+          <span className="w-2.5 h-2.5 bg-portal-primary border border-border-strong" />
           <span className="font-label-mono text-label-mono uppercase font-bold text-fg-primary">
             INSTITUTIONAL SUPPLY VS ENTERPRISE DEMAND BENCHMARK
           </span>
@@ -117,7 +119,7 @@ export const CurriculumGapChart: React.FC<CurriculumGapChartProps> = ({
             <Bar
               dataKey="demand"
               name="Market Demand %"
-              fill="#FACC15"
+              fill={accentColor}
               stroke="#18181B"
               strokeWidth={1}
               barSize={18}

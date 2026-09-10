@@ -21,7 +21,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
   ];
 
   return (
-    <div className="min-h-screen bg-bg-canvas text-fg-primary flex flex-col font-body-md">
+    <div data-portal="student" className="portal-student min-h-screen bg-bg-canvas text-fg-primary flex flex-col font-body-md">
       <Navbar />
 
       <div className="flex-1 flex w-full max-w-[1440px] mx-auto">
@@ -33,7 +33,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
               <span className="font-label-mono text-[10px] text-fg-muted uppercase block">NODE INSTANCE // CANDIDATE</span>
               <div className="flex items-center justify-between">
                 <span className="font-headline-sm text-body-md font-bold text-fg-primary uppercase">Aarav Sharma</span>
-                <span className="font-label-mono text-[10px] bg-accent-signal text-fg-primary px-1 py-0.5 border border-border-strong font-bold">LVL 12</span>
+                <span className="font-label-mono text-[10px] bg-portal-primary text-portal-on-primary px-1.5 py-0.5 border border-border-strong font-bold">LVL 12</span>
               </div>
               <span className="font-label-mono text-[11px] text-fg-secondary block">
                 IIT BOMBAY // CS-2025
@@ -54,11 +54,11 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
                     href={link.href}
                     className={`flex items-center gap-space-sm px-space-md py-2.5 transition-colors border-l-2 ${
                       isActive
-                        ? 'bg-bg-subtle text-fg-primary border-accent-signal font-bold'
+                        ? 'bg-portal-primary-soft/40 text-fg-primary border-portal-primary font-bold shadow-[inset_2px_0px_0px_0px_var(--portal-primary)]'
                         : 'text-fg-muted hover:text-fg-primary hover:bg-bg-subtle/50 border-transparent'
                     }`}
                   >
-                    <span className="material-symbols-outlined text-[18px]">{link.icon}</span>
+                    <span className={`material-symbols-outlined text-[18px] ${isActive ? 'text-portal-primary' : ''}`}>{link.icon}</span>
                     <span>{link.label}</span>
                   </Link>
                 );

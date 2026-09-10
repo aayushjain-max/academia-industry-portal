@@ -1,7 +1,7 @@
 from rest_framework import status, permissions
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework_simplejwt.tokens import RefreshToken
+from common.security.jwt import get_tokens_for_user
 from .serializers import RegisterSerializer, LoginSerializer, UserDetailSerializer
 
 class RegisterAPIView(APIView):
@@ -12,14 +12,14 @@ class RegisterAPIView(APIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
 
-        refresh = RefreshToken.for_user(user)
+        tokens = get_tokens_for_user(user)
         user_data = UserDetailSerializer(user).data
 
         return Response({
             'message': 'User registered successfully.',
             'user': user_data,
-            'access': str(refresh.access_token),
-            'refresh': str(refresh),
+            'access': tokens['access'],
+            'refresh': tokens['refresh'],
         }, status=status.HTTP_201_CREATED)
 
 class LoginAPIView(APIView):

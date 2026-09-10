@@ -4,13 +4,16 @@ from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import Opportunity, OpportunityStatus
 from .serializers import OpportunitySerializer
+from .permissions import OpportunityPermission
+from common.permissions.object_permissions import IsOpportunityOwner
+from common.constants.roles import UserRole
 from apps.industries.models import IndustryProfile
 from apps.skills.models import StudentSkill
 
 class OpportunityViewSet(viewsets.ModelViewSet):
     queryset = Opportunity.objects.select_related('industry').prefetch_related('required_skills').all()
     serializer_class = OpportunitySerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [OpportunityPermission, IsOpportunityOwner]
     filter_backends = [filters.SearchFilter, DjangoFilterBackend, filters.OrderingFilter]
     search_fields = ['title', 'description', 'industry__company_name', 'location']
     filterset_fields = ['opportunity_type', 'is_remote', 'status']
@@ -19,14 +22,20 @@ class OpportunityViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action in ['list', 'retrieve']:
             return [permissions.AllowAny()]
-        return super().get_permissions()
+        if self.action == 'match':
+            return [permissions.IsAuthenticated()]
+        return [OpportunityPermission(), IsOpportunityOwner()]
 
     def perform_create(self, serializer):
-        # Automatically assign industry profile of the current user
-        industry_profile, _ = IndustryProfile.objects.get_or_create(
-            user=self.request.user,
-            defaults={'company_name': f"{self.request.user.first_name}'s Organization"}
-        )
+        industry_profile = getattr(self.request.user, 'industry_profile', None)
+        if not industry_profile:
+            if self.request.user.role == UserRole.INDUSTRY:
+                industry_profile, _ = IndustryProfile.objects.get_or_create(
+                    user=self.request.user,
+                    defaults={'company_name': f"{self.request.user.first_name}'s Organization"}
+                )
+            else:
+                raise permissions.exceptions.PermissionDenied("An active Industry Profile is required to post opportunities.")
         serializer.save(industry=industry_profile)
 
     @action(detail=True, methods=['get'], permission_classes=[permissions.IsAuthenticated])

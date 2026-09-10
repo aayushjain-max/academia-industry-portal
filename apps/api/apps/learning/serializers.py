@@ -41,3 +41,6 @@ class IndustryTrainingSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'industry', 'created_at']
 
+LearningPathSerializer = LearningResourceSerializer
+
+

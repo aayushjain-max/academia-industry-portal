@@ -2,9 +2,97 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --portal-primary: #FACC15;
+  --portal-primary-hover: #EAB308;
+  --portal-secondary: #EAB308;
+  --portal-primary-soft: rgba(250, 204, 21, 0.12);
+  --portal-border: #FACC15;
+  --portal-glow: rgba(250, 204, 21, 0.15);
+  --portal-gradient: linear-gradient(135deg, #FACC15 0%, #EAB308 100%);
+  --portal-on-primary: #09090B;
+  --portal-tag-bg: rgba(250, 204, 21, 0.15);
+  --portal-tag-text: #854D0E;
+}
+
+/* Student Portal — BLUE (#3B82F6 / #06B6D4) */
+[data-portal="student"],
+.portal-student {
+  --portal-primary: #3B82F6;
+  --portal-primary-hover: #2563EB;
+  --portal-secondary: #06B6D4;
+  --portal-primary-soft: rgba(59, 130, 246, 0.12);
+  --portal-border: rgba(59, 130, 246, 0.45);
+  --portal-glow: rgba(59, 130, 246, 0.2);
+  --portal-gradient: linear-gradient(135deg, #3B82F6 0%, #06B6D4 100%);
+  --portal-on-primary: #FFFFFF;
+  --portal-tag-bg: rgba(59, 130, 246, 0.12);
+  --portal-tag-text: #1D4ED8;
+}
+
+/* Academician Portal — PURPLE (#8B5CF6 / #A78BFA) */
+[data-portal="academician"],
+.portal-academician {
+  --portal-primary: #8B5CF6;
+  --portal-primary-hover: #7C3AED;
+  --portal-secondary: #A78BFA;
+  --portal-primary-soft: rgba(139, 92, 246, 0.12);
+  --portal-border: rgba(139, 92, 246, 0.45);
+  --portal-glow: rgba(139, 92, 246, 0.2);
+  --portal-gradient: linear-gradient(135deg, #8B5CF6 0%, #A78BFA 100%);
+  --portal-on-primary: #FFFFFF;
+  --portal-tag-bg: rgba(139, 92, 246, 0.12);
+  --portal-tag-text: #6D28D9;
+}
+
+/* Institute Portal — GREEN / TEAL (#10B981 / #14B8A6) */
+[data-portal="institution"],
+.portal-institution {
+  --portal-primary: #10B981;
+  --portal-primary-hover: #059669;
+  --portal-secondary: #14B8A6;
+  --portal-primary-soft: rgba(16, 185, 129, 0.12);
+  --portal-border: rgba(16, 185, 129, 0.45);
+  --portal-glow: rgba(16, 185, 129, 0.2);
+  --portal-gradient: linear-gradient(135deg, #10B981 0%, #14B8A6 100%);
+  --portal-on-primary: #FFFFFF;
+  --portal-tag-bg: rgba(16, 185, 129, 0.12);
+  --portal-tag-text: #047857;
+}
+
+/* Industry Portal — CORAL / RED (#F43F5E / #F97316) */
+[data-portal="industry"],
+.portal-industry {
+  --portal-primary: #F43F5E;
+  --portal-primary-hover: #E11D48;
+  --portal-secondary: #F97316;
+  --portal-primary-soft: rgba(244, 63, 94, 0.12);
+  --portal-border: rgba(244, 63, 94, 0.45);
+  --portal-glow: rgba(244, 63, 94, 0.2);
+  --portal-gradient: linear-gradient(135deg, #F43F5E 0%, #F97316 100%);
+  --portal-on-primary: #FFFFFF;
+  --portal-tag-bg: rgba(244, 63, 94, 0.12);
+  --portal-tag-text: #BE123C;
+}
+
+/* Admin Portal — INDIGO / SLATE (#6366F1 / #64748B) */
+[data-portal="admin"],
+.portal-admin {
+  --portal-primary: #6366F1;
+  --portal-primary-hover: #4F46E5;
+  --portal-secondary: #64748B;
+  --portal-primary-soft: rgba(99, 102, 241, 0.12);
+  --portal-border: rgba(99, 102, 241, 0.45);
+  --portal-glow: rgba(99, 102, 241, 0.2);
+  --portal-gradient: linear-gradient(135deg, #6366F1 0%, #64748B 100%);
+  --portal-on-primary: #FFFFFF;
+  --portal-tag-bg: rgba(99, 102, 241, 0.12);
+  --portal-tag-text: #4338CA;
+}
+
 @layer base {
   body {
-    @apply bg-bg-canvas text-fg-primary antialiased selection:bg-accent-signal selection:text-fg-primary min-h-screen flex flex-col font-body-md;
+    @apply bg-bg-canvas text-fg-primary antialiased selection:bg-portal-primary selection:text-portal-on-primary min-h-screen flex flex-col font-body-md;
   }
 }
 

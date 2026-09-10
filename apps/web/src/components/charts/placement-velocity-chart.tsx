@@ -38,7 +38,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
       <div className="bg-fg-primary text-bg-surface border border-border-strong p-2.5 shadow-[2px_2px_0px_0px_#18181B] font-mono text-xs">
-        <span className="font-bold text-accent-signal block mb-1.5 uppercase">
+        <span className="font-bold text-portal-primary block mb-1.5 uppercase">
           TIMEFRAME // {label} 2024
         </span>
         {payload.map((entry: any) => (

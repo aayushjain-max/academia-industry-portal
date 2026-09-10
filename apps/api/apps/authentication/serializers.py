@@ -74,6 +74,11 @@ class RegisterSerializer(serializers.Serializer):
             raise serializers.ValidationError("A user with this email address already exists.")
         return value.lower()
 
+    def validate_password(self, value):
+        from django.contrib.auth.password_validation import validate_password
+        validate_password(value)
+        return value
+
     def validate_role(self, value):
         # Disallow privilege escalation / self-registration as SUPER_ADMIN
         if value == UserRole.SUPER_ADMIN:
@@ -121,6 +126,8 @@ class RegisterSerializer(serializers.Serializer):
 
         return user
 
+from common.security.jwt import get_tokens_for_user
+
 class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True)
@@ -135,9 +142,9 @@ class LoginSerializer(serializers.Serializer):
         if not user.is_active:
             raise serializers.ValidationError("User account is disabled.")
 
-        refresh = RefreshToken.for_user(user)
+        tokens = get_tokens_for_user(user)
         return {
             'user': user,
-            'access': str(refresh.access_token),
-            'refresh': str(refresh),
+            'access': tokens['access'],
+            'refresh': tokens['refresh'],
         }

@@ -6,7 +6,8 @@ export class OpportunitiesApi {
 
   async listOpportunities(params?: Record<string, string>) {
     const qs = params ? '?' + new URLSearchParams(params).toString() : '';
-    return this.client.request<Opportunity[]>(`/opportunities/${qs}`);
+    const res: any = await this.client.request<any>(`/opportunities/${qs}`);
+    return Array.isArray(res) ? res : res?.results || [];
   }
 
   async getOpportunity(id: string) {

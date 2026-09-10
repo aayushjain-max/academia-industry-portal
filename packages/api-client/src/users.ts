@@ -4,12 +4,16 @@ import { User, UserProfile } from '@portal/shared-types';
 export class UsersApi {
   constructor(private client: ApiClient) {}
 
-  async getProfile(userId: string) {
-    return this.client.request<UserProfile>(`/users/${userId}/profile/`);
+  async getCurrentUser() {
+    return this.client.request<User>('/auth/me/');
   }
 
-  async updateProfile(userId: string, data: Partial<UserProfile>) {
-    return this.client.request<UserProfile>(`/users/${userId}/profile/`, {
+  async getProfile(userId: string) {
+    return this.client.request<User>(`/users/${userId}/`);
+  }
+
+  async updateProfile(userId: string, data: Partial<User>) {
+    return this.client.request<User>(`/users/${userId}/`, {
       method: 'PATCH',
       body: JSON.stringify(data),
     });

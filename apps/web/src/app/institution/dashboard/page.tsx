@@ -1,13 +1,37 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CurriculumGapChart, PlacementVelocityChart } from '@/components/charts';
+import { getMyInstitutionProfile, getInstitutionAnalytics, InstitutionProfile, InstitutionAnalytics } from '@/features/institutions/api';
+import { getInstitutionOverview, getSkillDemandHeatmap, InstitutionOverview } from '@/features/analytics/api';
+import { Loader2 } from 'lucide-react';
 
 export default function InstitutionDashboardPage() {
+  const [profile, setProfile] = useState<InstitutionProfile | null>(null);
+  const [analytics, setAnalytics] = useState<InstitutionOverview | null>(null);
   const [activeTab, setActiveTab] = useState<'heatmap' | 'funnel' | 'reports'>('heatmap');
   const [cohortBatch, setCohortBatch] = useState('2021-2025 B.Tech (Final Year)');
   const [reportArchetype, setReportArchetype] = useState<'naac' | 'nirf' | 'aicte' | 'deficit'>('naac');
   const [actionNotice, setActionNotice] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadInstitutionData() {
+      try {
+        const [profData, overviewData] = await Promise.allSettled([
+          getMyInstitutionProfile(),
+          getInstitutionOverview(),
+        ]);
+        if (profData.status === 'fulfilled') setProfile(profData.value);
+        if (overviewData.status === 'fulfilled') setAnalytics(overviewData.value);
+      } catch (err) {
+        console.error('Failed to load institution data:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadInstitutionData();
+  }, []);
 
   const triggerNotice = (msg: string) => {
     setActionNotice(msg);
@@ -93,11 +117,13 @@ export default function InstitutionDashboardPage() {
               </span>
             </div>
             <div className="flex items-baseline gap-2">
-              <span className="font-metric-tabular text-metric-tabular text-fg-primary font-bold">81.4%</span>
+              <span className="font-metric-tabular text-metric-tabular text-fg-primary font-bold">
+                {analytics?.averageSkillReadiness ? `${analytics.averageSkillReadiness}%` : '81.4%'}
+              </span>
               <span className="font-label-mono text-label-mono text-fg-muted">Q3 Index</span>
             </div>
             <div className="w-full bg-bg-subtle h-1.5 mt-2 overflow-hidden border border-border-hairline">
-              <div className="bg-border-strong h-full" style={{ width: '81.4%' }} />
+              <div className="bg-border-strong h-full" style={{ width: `${analytics?.averageSkillReadiness || 81.4}%` }} />
             </div>
           </div>
 
@@ -108,25 +134,31 @@ export default function InstitutionDashboardPage() {
               <span className="font-label-mono text-[10px] text-fg-muted">TGT: 90.0%</span>
             </div>
             <div className="flex items-baseline gap-2">
-              <span className="font-metric-tabular text-metric-tabular text-fg-primary font-bold">84.8%</span>
+              <span className="font-metric-tabular text-metric-tabular text-fg-primary font-bold">
+                {analytics?.placementRate ? `${analytics.placementRate}%` : '84.8%'}
+              </span>
               <span className="font-label-mono text-label-mono text-status-warning font-semibold">Δ -5.2%</span>
             </div>
             <div className="w-full bg-bg-subtle h-1.5 mt-2 overflow-hidden border border-border-hairline">
-              <div className="bg-status-warning h-full" style={{ width: '84.8%' }} />
+              <div className="bg-status-warning h-full" style={{ width: `${analytics?.placementRate || 84.8}%` }} />
             </div>
           </div>
 
           {/* Stat 3 */}
           <div className="p-space-md bg-bg-surface border-b lg:border-b-0 border-r border-border-hairline flex flex-col justify-between">
             <div className="flex items-center justify-between mb-1">
-              <span className="font-label-mono text-label-mono text-fg-muted uppercase">Curriculum Deficits</span>
-              <span className="w-2 h-2 rounded-full bg-accent-signal" />
+              <span className="font-label-mono text-label-mono text-fg-muted uppercase">Internship Velocity</span>
+              <span className="w-2 h-2 rounded-full bg-portal-primary" />
             </div>
             <div className="flex items-baseline gap-2">
-              <span className="font-metric-tabular text-metric-tabular text-accent-signal font-bold">03</span>
-              <span className="font-label-mono text-label-mono text-fg-muted">Critical Systems</span>
+              <span className="font-metric-tabular text-metric-tabular text-portal-primary font-bold">
+                {analytics?.internshipRate ? `${analytics.internshipRate}%` : '74.2%'}
+              </span>
+              <span className="font-label-mono text-label-mono text-fg-muted">Active</span>
             </div>
-            <div className="font-label-mono text-[10px] text-fg-secondary truncate mt-1">Docker/K8s, Microservices, Arch</div>
+            <div className="w-full bg-bg-subtle h-1.5 mt-2 overflow-hidden border border-border-hairline">
+              <div className="bg-portal-primary h-full" style={{ width: `${analytics?.internshipRate || 74.2}%` }} />
+            </div>
           </div>
 
           {/* Stat 4 */}
@@ -165,18 +197,18 @@ export default function InstitutionDashboardPage() {
               onClick={() => setActiveTab('heatmap')}
               className={`px-space-md py-3.5 border-b-2 font-label-mono text-label-mono uppercase tracking-wider font-semibold whitespace-nowrap transition-colors flex items-center gap-2 ${
                 activeTab === 'heatmap'
-                  ? 'border-border-strong text-fg-primary bg-bg-subtle'
+                  ? 'border-portal-primary text-fg-primary bg-portal-primary-soft/40'
                   : 'border-transparent text-fg-muted hover:text-fg-primary'
               }`}
             >
-              <span className="w-1.5 h-1.5 bg-border-strong" />
+              <span className="w-1.5 h-1.5 bg-portal-primary" />
               01. COHORT SKILLS &amp; HEATMAP
             </button>
             <button
               onClick={() => setActiveTab('funnel')}
               className={`px-space-md py-3.5 border-b-2 font-label-mono text-label-mono uppercase tracking-wider font-semibold whitespace-nowrap transition-colors flex items-center gap-2 ${
                 activeTab === 'funnel'
-                  ? 'border-border-strong text-fg-primary bg-bg-subtle'
+                  ? 'border-portal-primary text-fg-primary bg-portal-primary-soft/40'
                   : 'border-transparent text-fg-muted hover:text-fg-primary'
               }`}
             >
@@ -187,11 +219,11 @@ export default function InstitutionDashboardPage() {
               onClick={() => setActiveTab('reports')}
               className={`px-space-md py-3.5 border-b-2 font-label-mono text-label-mono uppercase tracking-wider font-semibold whitespace-nowrap transition-colors flex items-center gap-2 ${
                 activeTab === 'reports'
-                  ? 'border-border-strong text-fg-primary bg-bg-subtle'
+                  ? 'border-portal-primary text-fg-primary bg-portal-primary-soft/40'
                   : 'border-transparent text-fg-muted hover:text-fg-primary'
               }`}
             >
-              <span className="w-1.5 h-1.5 bg-accent-signal" />
+              <span className="w-1.5 h-1.5 bg-portal-primary" />
               03. ACCREDITATION REPORT BUILDER
             </button>
           </div>
@@ -227,12 +259,12 @@ export default function InstitutionDashboardPage() {
                 <span className="w-2 h-2 bg-border-strong" /> Institutional Supply
               </span>
               <span className="inline-flex items-center gap-1.5 font-label-mono text-label-mono text-fg-muted ml-3">
-                <span className="w-2 h-2 bg-accent-signal" /> Live Market Demand
+                <span className="w-2 h-2 bg-portal-primary" /> Live Market Demand
               </span>
             </div>
           </div>
 
-          <CurriculumGapChart height={280} />
+          <CurriculumGapChart height={280} accentColor="#10B981" />
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-space-lg">
             {/* Left 7 Cols: Skill Supply vs Demand Benchmarks */}
@@ -264,25 +296,25 @@ export default function InstitutionDashboardPage() {
                   </div>
                 </div>
                 <div className="grid grid-cols-12 items-center gap-2 font-label-mono text-label-mono">
-                  <span className="col-span-3 text-accent-signal font-semibold">Demand: 96%</span>
+                  <span className="col-span-3 text-portal-primary font-semibold">Demand: 96%</span>
                   <div className="col-span-9 bg-bg-subtle h-3 flex overflow-hidden border border-border-hairline">
-                    <div className="bg-accent-signal h-full" style={{ width: '96%' }} />
+                    <div className="bg-portal-primary h-full" style={{ width: '96%' }} />
                   </div>
                 </div>
               </div>
 
               {/* Skill 2: Critical Deficit */}
-              <div className="space-y-1.5 p-3 bg-bg-subtle border-l-4 border-accent-signal">
+              <div className="space-y-1.5 p-3 bg-portal-primary-soft/30 border-l-4 border-portal-primary">
                 <div className="flex items-baseline justify-between">
                   <div>
                     <span className="font-body-md text-body-md font-semibold text-fg-primary">
                       Containerization &amp; Kubernetes Orchestration
                     </span>
-                    <span className="ml-2 font-label-mono text-[10px] text-accent-signal font-bold bg-white px-1 border border-accent-signal">
+                    <span className="ml-2 font-label-mono text-[10px] text-portal-primary font-bold bg-white px-1 border border-portal-primary">
                       [CRITICAL BOTTLENECK -47%]
                     </span>
                   </div>
-                  <span className="font-label-mono text-label-mono text-accent-signal font-bold">Delta: -47% DEFICIT</span>
+                  <span className="font-label-mono text-label-mono text-portal-primary font-bold">Delta: -47% DEFICIT</span>
                 </div>
                 <div className="grid grid-cols-12 items-center gap-2 font-label-mono text-label-mono">
                   <span className="col-span-3 text-fg-muted">Supply: 42%</span>
@@ -291,9 +323,9 @@ export default function InstitutionDashboardPage() {
                   </div>
                 </div>
                 <div className="grid grid-cols-12 items-center gap-2 font-label-mono text-label-mono">
-                  <span className="col-span-3 text-accent-signal font-semibold">Demand: 89%</span>
+                  <span className="col-span-3 text-portal-primary font-semibold">Demand: 89%</span>
                   <div className="col-span-9 bg-white h-3 flex overflow-hidden border border-border-hairline">
-                    <div className="bg-accent-signal h-full" style={{ width: '89%' }} />
+                    <div className="bg-portal-primary h-full" style={{ width: '89%' }} />
                   </div>
                 </div>
                 <p className="font-body-sm text-body-sm text-fg-muted pt-1">
@@ -321,9 +353,9 @@ export default function InstitutionDashboardPage() {
                   </div>
                 </div>
                 <div className="grid grid-cols-12 items-center gap-2 font-label-mono text-label-mono">
-                  <span className="col-span-3 text-accent-signal font-semibold">Demand: 82%</span>
+                  <span className="col-span-3 text-portal-primary font-semibold">Demand: 82%</span>
                   <div className="col-span-9 bg-bg-subtle h-3 flex overflow-hidden border border-border-hairline">
-                    <div className="bg-accent-signal h-full" style={{ width: '82%' }} />
+                    <div className="bg-portal-primary h-full" style={{ width: '82%' }} />
                   </div>
                 </div>
               </div>
@@ -348,9 +380,9 @@ export default function InstitutionDashboardPage() {
                   </div>
                 </div>
                 <div className="grid grid-cols-12 items-center gap-2 font-label-mono text-label-mono">
-                  <span className="col-span-3 text-accent-signal font-semibold">Demand: 84%</span>
+                  <span className="col-span-3 text-portal-primary font-semibold">Demand: 84%</span>
                   <div className="col-span-9 bg-bg-subtle h-3 flex overflow-hidden border border-border-hairline">
-                    <div className="bg-accent-signal h-full" style={{ width: '84%' }} />
+                    <div className="bg-portal-primary h-full" style={{ width: '84%' }} />
                   </div>
                 </div>
               </div>
@@ -375,9 +407,9 @@ export default function InstitutionDashboardPage() {
                   </div>
                 </div>
                 <div className="grid grid-cols-12 items-center gap-2 font-label-mono text-label-mono">
-                  <span className="col-span-3 text-accent-signal font-semibold">Demand: 85%</span>
+                  <span className="col-span-3 text-portal-primary font-semibold">Demand: 85%</span>
                   <div className="col-span-9 bg-bg-subtle h-3 flex overflow-hidden border border-border-hairline">
-                    <div className="bg-accent-signal h-full" style={{ width: '85%' }} />
+                    <div className="bg-portal-primary h-full" style={{ width: '85%' }} />
                   </div>
                 </div>
               </div>
@@ -445,7 +477,7 @@ export default function InstitutionDashboardPage() {
               {/* Automated Gap Prescription Notice */}
               <div className="bg-bg-subtle border border-border-hairline p-space-md">
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="material-symbols-outlined text-[18px] text-accent-signal">warning</span>
+                  <span className="material-symbols-outlined text-[18px] text-portal-primary">warning</span>
                   <span className="font-label-mono text-label-mono font-bold uppercase text-fg-primary">
                     AICTE Model Curriculum Deviation
                   </span>
@@ -1034,7 +1066,7 @@ export default function InstitutionDashboardPage() {
                   </button>
                   <button
                     onClick={() => triggerNotice('Official NAAC/AICTE Accredited PDF has been queued for signed cryptographic download.')}
-                    className="px-space-sm py-2.5 bg-accent-signal hover:bg-status-danger text-on-primary border border-accent-signal font-label-mono text-label-mono uppercase font-bold flex items-center justify-center gap-1.5 transition-colors"
+                    className="px-space-sm py-2.5 bg-portal-primary hover:bg-portal-primary-hover text-portal-on-primary border border-portal-primary font-label-mono text-label-mono uppercase font-bold flex items-center justify-center gap-1.5 transition-colors"
                   >
                     <span className="material-symbols-outlined text-[16px]">picture_as_pdf</span>
                     <span>EXPORT OFFICIAL PDF</span>

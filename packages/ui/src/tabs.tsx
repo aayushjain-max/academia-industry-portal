@@ -82,7 +82,7 @@ export const TabTrigger: React.FC<TabTriggerProps> = ({
       className={cn(
         'px-space-md py-2.5 font-label-mono text-xs uppercase tracking-wider transition-colors border-b-2 whitespace-nowrap focus-visible:outline-none focus-visible:bg-bg-subtle',
         isActive
-          ? 'border-accent-signal text-fg-primary font-bold bg-bg-subtle/50'
+          ? 'border-portal-primary text-fg-primary font-bold bg-portal-primary-soft/40'
           : 'border-transparent text-fg-muted hover:text-fg-primary hover:border-border-hairline',
         className
       )}

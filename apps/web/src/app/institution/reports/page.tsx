@@ -52,7 +52,7 @@ export default function InstitutionReportsPage() {
             </p>
           </div>
           <div className="p-4 border border-border-hairline bg-bg-canvas space-y-2">
-            <span className="font-label-mono text-xs px-2 py-0.5 bg-accent-signal text-fg-primary font-bold">AICTE</span>
+            <span className="font-label-mono text-xs px-2 py-0.5 bg-portal-primary text-portal-on-primary font-bold">AICTE</span>
             <h3 className="font-headline-sm text-body-md font-bold text-fg-primary">
               AICTE MoU &amp; Industrial Training
             </h3>
@@ -65,7 +65,7 @@ export default function InstitutionReportsPage() {
         <div className="pt-4 border-t border-border-hairline flex justify-end">
           <Link
             href="/institution/dashboard"
-            className="px-4 py-2 bg-primary text-on-primary font-label-mono text-xs uppercase font-bold"
+            className="px-4 py-2 bg-portal-primary text-portal-on-primary hover:bg-portal-primary-hover font-label-mono text-xs uppercase font-bold"
           >
             Configure &amp; Export Official PDF
           </Link>

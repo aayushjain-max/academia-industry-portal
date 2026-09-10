@@ -8,7 +8,7 @@ services:
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-academia_industry_db}
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres_secure_password_here}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be provided in .env}
     ports:
       - "5432:5432"
     volumes:
@@ -22,8 +22,6 @@ services:
     container_name: acad_portal_redis
     restart: unless-stopped
     command: redis-server --appendonly yes
-    ports:
-      - "6379:6379"
     volumes:
       - redis_data:/data
     networks:
@@ -35,7 +33,7 @@ services:
       dockerfile: infrastructure/docker/backend/Dockerfile
     container_name: acad_portal_backend
     restart: unless-stopped
-    command: python apps/api/manage.py runserver 0.0.0.0:8000
+    command: python manage.py runserver 0.0.0.0:8000
     volumes:
       - ./apps/api:/app/apps/api
     ports:

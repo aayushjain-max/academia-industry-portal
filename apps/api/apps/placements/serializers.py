@@ -27,3 +27,6 @@ class PlacementRecordSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'student', 'offered_at']
 
+PlacementSerializer = PlacementDriveSerializer
+
+

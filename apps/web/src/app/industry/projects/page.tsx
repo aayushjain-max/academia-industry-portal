@@ -8,7 +8,7 @@ export default function IndustryProjectsPage() {
     <div className="flex flex-col w-full space-y-space-md">
       <div className="border border-border-hairline bg-bg-surface p-space-md lg:p-space-lg">
         <div className="flex items-center gap-space-xs text-xs font-label-mono text-fg-muted mb-1">
-          <span className="w-2 h-2 bg-[#FACC15]" />
+          <span className="w-2 h-2 bg-portal-primary" />
           <span>IND-SPRINT-2024 // CORPORATE SPONSORED CHALLENGES</span>
         </div>
         <h1 className="font-headline-lg text-headline-lg text-fg-primary uppercase font-extrabold">
@@ -35,7 +35,7 @@ export default function IndustryProjectsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="p-4 bg-bg-canvas border border-border-hairline space-y-2">
             <div className="flex justify-between items-center">
-              <span className="font-label-mono text-xs px-2 py-0.5 bg-[#FACC15] text-[#18181B] font-bold">
+              <span className="font-label-mono text-xs px-2 py-0.5 bg-portal-primary text-portal-on-primary font-bold">
                 SIH PROBLEM #PS-094
               </span>
               <span className="font-label-mono text-xs text-status-success font-bold">GRANT: ₹5L</span>

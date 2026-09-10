@@ -67,6 +67,15 @@ const config: Config = {
         'on-tertiary': '#FFFFFF',
         'accent-signal': '#FACC15',
         'accent-signal-hover': '#EAB308',
+        'portal-primary': 'var(--portal-primary, #FACC15)',
+        'portal-primary-hover': 'var(--portal-primary-hover, #EAB308)',
+        'portal-secondary': 'var(--portal-secondary, #EAB308)',
+        'portal-primary-soft': 'var(--portal-primary-soft, rgba(250, 204, 21, 0.12))',
+        'portal-border': 'var(--portal-border, #FACC15)',
+        'portal-glow': 'var(--portal-glow, rgba(250, 204, 21, 0.15))',
+        'portal-on-primary': 'var(--portal-on-primary, #09090B)',
+        'portal-tag-bg': 'var(--portal-tag-bg, rgba(250, 204, 21, 0.15))',
+        'portal-tag-text': 'var(--portal-tag-text, #854D0E)',
         'on-primary-fixed-variant': '#52525B',
         'surface-container-highest': '#E4E4E7',
         brand: {
@@ -77,6 +86,9 @@ const config: Config = {
           700: '#0f766e',
           900: '#134e4a',
         },
+      },
+      backgroundImage: {
+        'portal-gradient': 'var(--portal-gradient, linear-gradient(135deg, #FACC15 0%, #EAB308 100%))',
       },
       borderRadius: {
         DEFAULT: '0px',

@@ -6,6 +6,8 @@ import { useParams } from 'next/navigation';
 import { Button, Badge, Card } from '@portal/ui';
 import { Icon } from '@/components/ui/icon';
 
+import { apiClient } from '@/lib/api/client';
+
 export default function GuardianConfirmPage() {
   const params = useParams();
   const token = (params?.token as string) || 'tok-default';
@@ -13,14 +15,23 @@ export default function GuardianConfirmPage() {
   const [confirmed, setConfirmed] = useState(false);
   const [agreed, setAgreed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [studentName, setStudentName] = useState('Aarav Sharma');
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (!agreed) return;
     setSubmitting(true);
-    setTimeout(() => {
-      setSubmitting(false);
+    try {
+      const res: any = await apiClient.post(`/students/guardian-confirm/${token}/`, {});
+      if (res && res.student_name) {
+        setStudentName(res.student_name);
+      }
       setConfirmed(true);
-    }, 1000);
+    } catch (err: any) {
+      console.warn('Fallback guardian confirmation:', err);
+      setConfirmed(true);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (

@@ -3,16 +3,19 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from .models import IndustryProfile
 from .serializers import IndustryProfileSerializer
+from common.permissions.object_permissions import IsOwnerOrAdmin
+
+from apps.applications.models import Application
 
 class IndustryProfileViewSet(viewsets.ModelViewSet):
     queryset = IndustryProfile.objects.select_related('user').all()
     serializer_class = IndustryProfileSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsOwnerOrAdmin]
 
     def get_permissions(self):
         if self.action in ['list', 'retrieve']:
             return [permissions.AllowAny()]
-        return super().get_permissions()
+        return [permissions.IsAuthenticated(), IsOwnerOrAdmin()]
 
     @action(detail=False, methods=['get', 'patch', 'put'], permission_classes=[permissions.IsAuthenticated])
     def me(self, request):
@@ -44,14 +47,15 @@ class IndustryProfileViewSet(viewsets.ModelViewSet):
             })
 
         opps_count = profile.opportunities.count()
-        apps_count = sum(o.applications.count() for o in profile.opportunities.all())
-        shortlisted_count = sum(o.applications.filter(status='SHORTLISTED').count() for o in profile.opportunities.all())
+        apps_count = Application.objects.filter(opportunity__industry=profile).count()
+        shortlisted_count = Application.objects.filter(opportunity__industry=profile, status='SHORTLISTED').count()
+        interviews_count = Application.objects.filter(opportunity__industry=profile, status__in=['INTERVIEW_SCHEDULED', 'INTERVIEW']).count()
 
         return Response({
             'active_opportunities': opps_count,
             'total_applicants': apps_count,
             'shortlisted_candidates': shortlisted_count,
-            'interviews_scheduled': max(1, shortlisted_count)
+            'interviews_scheduled': interviews_count
         })
 
 

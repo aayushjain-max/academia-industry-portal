@@ -45,8 +45,7 @@ class MentorshipSession(models.Model):
     )
     topic = models.CharField(max_length=255)
     scheduled_at = models.DateTimeField()
-    duration_minutes = models.PositiveIntegerField(default=45)
-    meeting_link = models.URLField(blank=True, default='https://meet.jit.si/portal-mentorship-session')
+    meeting_link = models.URLField(blank=True, default='')
     status = models.CharField(max_length=30, choices=STATUS_CHOICES, default='REQUESTED')
     feedback_notes = models.TextField(blank=True, default='')
     rating = models.PositiveIntegerField(null=True, blank=True)
@@ -55,6 +54,12 @@ class MentorshipSession(models.Model):
 
     class Meta:
         ordering = ['-scheduled_at']
+
+    def save(self, *args, **kwargs):
+        if not self.meeting_link:
+            room_hash = str(self.id or uuid.uuid4())[:8]
+            self.meeting_link = f"https://meet.jit.si/portal-mentorship-{room_hash}"
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"Session: {self.topic} ({self.mentor.email} & {self.mentee.email})"

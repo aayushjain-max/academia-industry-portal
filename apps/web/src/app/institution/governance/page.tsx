@@ -149,7 +149,7 @@ export default function InstitutionGovernancePage() {
         <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-space-md border-b border-border-hairline pb-space-md">
           <div className="space-y-1">
             <div className="flex items-center gap-space-xs">
-              <span className="w-2 h-2 bg-accent-signal" />
+              <span className="w-2 h-2 bg-portal-primary" />
               <span className="font-label-mono text-label-mono text-fg-muted uppercase tracking-widest">
                 // INST-DEL-0842 // SIH ACCREDITATION COUNCIL
               </span>
@@ -179,7 +179,7 @@ export default function InstitutionGovernancePage() {
             </button>
             <button
               onClick={() => triggerNotice('Initiating batch consensus verification for all pending credential claims...')}
-              className="px-space-md py-2 bg-primary text-on-primary border border-primary font-label-mono text-label-mono uppercase hover:bg-fg-secondary transition-colors flex items-center gap-1.5"
+              className="px-space-md py-2 bg-portal-primary text-portal-on-primary border border-portal-primary font-label-mono text-label-mono uppercase hover:bg-portal-primary-hover transition-colors flex items-center gap-1.5"
             >
               <span className="material-symbols-outlined text-[16px]">verified</span>Bulk Verify Documents
             </button>
@@ -195,7 +195,7 @@ export default function InstitutionGovernancePage() {
               <span className="font-label-mono text-label-mono text-status-success font-semibold">98.4% ACT</span>
             </div>
             <div className="w-full bg-bg-subtle h-1 mt-2 border border-border-hairline">
-              <div className="bg-primary h-1" style={{ width: '98%' }} />
+              <div className="bg-portal-primary h-1" style={{ width: '98%' }} />
             </div>
           </div>
           <div className="bg-bg-surface p-space-md">
@@ -205,7 +205,7 @@ export default function InstitutionGovernancePage() {
               <span className="font-label-mono text-label-mono text-fg-muted font-semibold">100% SEC</span>
             </div>
             <div className="w-full bg-bg-subtle h-1 mt-2 border border-border-hairline">
-              <div className="bg-primary h-1" style={{ width: '100%' }} />
+              <div className="bg-portal-primary h-1" style={{ width: '100%' }} />
             </div>
           </div>
           <div className="bg-bg-surface p-space-md">
@@ -215,20 +215,20 @@ export default function InstitutionGovernancePage() {
               <span className="font-label-mono text-label-mono text-status-success font-semibold">+14 MoM</span>
             </div>
             <div className="w-full bg-bg-subtle h-1 mt-2 border border-border-hairline">
-              <div className="bg-primary h-1" style={{ width: '74%' }} />
+              <div className="bg-portal-primary h-1" style={{ width: '74%' }} />
             </div>
           </div>
           <div className="bg-bg-surface p-space-md">
             <div className="flex items-center justify-between">
-              <span className="font-label-mono text-label-mono uppercase text-accent-signal font-semibold">Pending Audits</span>
-              <span className="w-2 h-2 rounded-full bg-accent-signal animate-pulse" />
+              <span className="font-label-mono text-label-mono uppercase text-portal-primary font-semibold">Pending Audits</span>
+              <span className="w-2 h-2 rounded-full bg-portal-primary animate-pulse" />
             </div>
             <div className="flex items-baseline gap-space-xs mt-1">
-              <span className="font-metric-tabular text-metric-tabular text-accent-signal font-bold">{pendingCount}</span>
-              <span className="font-label-mono text-label-mono text-accent-signal font-semibold">CRITICAL</span>
+              <span className="font-metric-tabular text-metric-tabular text-portal-primary font-bold">{pendingCount}</span>
+              <span className="font-label-mono text-label-mono text-portal-primary font-semibold">CRITICAL</span>
             </div>
             <div className="w-full bg-bg-subtle h-1 mt-2 border border-border-hairline">
-              <div className="bg-accent-signal h-1" style={{ width: `${(pendingCount / 4) * 100}%` }} />
+              <div className="bg-portal-primary h-1" style={{ width: `${(pendingCount / 4) * 100}%` }} />
             </div>
           </div>
           <div className="bg-bg-surface p-space-md col-span-2 md:col-span-1">
@@ -254,11 +254,11 @@ export default function InstitutionGovernancePage() {
             onClick={() => setActiveTab('verification')}
             className={`px-space-md py-3 font-label-mono text-label-mono uppercase tracking-wider transition-colors flex items-center gap-2 ${
               activeTab === 'verification'
-                ? 'bg-bg-surface text-fg-primary border-b-2 border-border-strong font-bold'
+                ? 'bg-bg-surface text-fg-primary border-b-2 border-portal-primary bg-portal-primary-soft/30 font-bold'
                 : 'bg-bg-canvas text-fg-muted hover:text-fg-primary hover:bg-bg-surface'
             }`}
           >
-            <span className="w-1.5 h-1.5 bg-accent-signal" />
+            <span className="w-1.5 h-1.5 bg-portal-primary" />
             01. Verification &amp; Credential Audit
             <span className="ml-1 px-1.5 py-0.5 bg-bg-subtle border border-border-hairline text-[10px]">
               {pendingCount}
@@ -268,7 +268,7 @@ export default function InstitutionGovernancePage() {
             onClick={() => setActiveTab('users')}
             className={`px-space-md py-3 font-label-mono text-label-mono uppercase tracking-wider transition-colors flex items-center gap-2 ${
               activeTab === 'users'
-                ? 'bg-bg-surface text-fg-primary border-b-2 border-border-strong font-bold'
+                ? 'bg-bg-surface text-fg-primary border-b-2 border-portal-primary bg-portal-primary-soft/30 font-bold'
                 : 'bg-bg-canvas text-fg-muted hover:text-fg-primary hover:bg-bg-surface'
             }`}
           >
@@ -280,7 +280,7 @@ export default function InstitutionGovernancePage() {
             onClick={() => setActiveTab('opportunities')}
             className={`px-space-md py-3 font-label-mono text-label-mono uppercase tracking-wider transition-colors flex items-center gap-2 ${
               activeTab === 'opportunities'
-                ? 'bg-bg-surface text-fg-primary border-b-2 border-border-strong font-bold'
+                ? 'bg-bg-surface text-fg-primary border-b-2 border-portal-primary bg-portal-primary-soft/30 font-bold'
                 : 'bg-bg-canvas text-fg-muted hover:text-fg-primary hover:bg-bg-surface'
             }`}
           >
@@ -292,7 +292,7 @@ export default function InstitutionGovernancePage() {
             onClick={() => setActiveTab('archive')}
             className={`px-space-md py-3 font-label-mono text-label-mono uppercase tracking-wider transition-colors flex items-center gap-2 ${
               activeTab === 'archive'
-                ? 'bg-bg-surface text-fg-primary border-b-2 border-border-strong font-bold'
+                ? 'bg-bg-surface text-fg-primary border-b-2 border-portal-primary bg-portal-primary-soft/30 font-bold'
                 : 'bg-bg-canvas text-fg-muted hover:text-fg-primary hover:bg-bg-surface'
             }`}
           >
@@ -313,7 +313,7 @@ export default function InstitutionGovernancePage() {
                 onClick={() => setFilterCategory('all')}
                 className={`px-2.5 py-1 font-label-mono text-label-mono uppercase ${
                   filterCategory === 'all'
-                    ? 'bg-primary text-on-primary'
+                    ? 'bg-portal-primary text-portal-on-primary'
                     : 'bg-bg-subtle text-fg-secondary hover:bg-border-hairline'
                 }`}
               >
@@ -392,7 +392,7 @@ export default function InstitutionGovernancePage() {
                     <span
                       className={`font-label-mono text-label-mono px-2 py-0.5 border font-semibold ${
                         claim.tagType === 'urgent'
-                          ? 'bg-accent-signal/10 text-accent-signal border-accent-signal/30'
+                          ? 'bg-portal-primary-soft text-portal-primary border-portal-primary/30'
                           : claim.tagType === 'research'
                           ? 'bg-status-warning/10 text-status-warning border-status-warning/30'
                           : claim.tagType === 'patent'
@@ -609,7 +609,7 @@ export default function InstitutionGovernancePage() {
           <div className="space-y-3">
             <div className="p-4 bg-bg-subtle border border-border-hairline flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
-                <span className="font-label-mono text-xs px-2 py-0.5 bg-accent-signal text-fg-primary font-bold">
+                <span className="font-label-mono text-xs px-2 py-0.5 bg-portal-primary text-portal-on-primary font-bold">
                   URGENT REVIEW
                 </span>
                 <h3 className="font-headline-sm text-body-lg font-bold text-fg-primary mt-1">
@@ -622,7 +622,7 @@ export default function InstitutionGovernancePage() {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => triggerNotice('Google DeepMind requisition approved for student visibility.')}
-                  className="px-4 py-2 bg-primary text-on-primary font-label-mono text-label-mono uppercase font-bold"
+                  className="px-4 py-2 bg-portal-primary text-portal-on-primary font-label-mono text-label-mono uppercase font-bold hover:bg-portal-primary-hover transition-colors"
                 >
                   Approve Posting
                 </button>
@@ -690,7 +690,7 @@ export default function InstitutionGovernancePage() {
           <div className="bg-bg-surface border-2 border-border-strong w-full max-w-2xl p-space-lg space-y-space-md">
             <div className="flex items-center justify-between border-b border-border-hairline pb-2">
               <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 bg-accent-signal" />
+                <span className="w-2.5 h-2.5 bg-portal-primary" />
                 <span className="font-label-mono text-label-mono uppercase tracking-wider font-bold">
                   CRYPTOGRAPHIC CREDENTIAL INSPECTION // {inspectDrawerClaim.docketId}
                 </span>

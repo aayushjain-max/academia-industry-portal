@@ -48,7 +48,7 @@ export default function IndustryJDAnalyzerPage() {
     <div className="flex flex-col w-full space-y-space-md">
       <div className="border border-border-hairline bg-bg-surface p-space-md lg:p-space-lg">
         <div className="flex items-center gap-space-xs text-xs font-label-mono text-fg-muted mb-1">
-          <span className="w-2 h-2 bg-[#FACC15]" />
+          <span className="w-2 h-2 bg-portal-primary" />
           <span>IND-RECRUIT-2024 // AI SKILL EXTRACTION &amp; TAXONOMY ENGINE</span>
         </div>
         <h1 className="font-headline-lg text-headline-lg text-fg-primary uppercase font-extrabold">
@@ -81,7 +81,7 @@ export default function IndustryJDAnalyzerPage() {
             <button
               onClick={handleAnalyze}
               disabled={loading}
-              className="px-4 py-2 bg-primary text-on-primary font-label-mono text-xs uppercase font-bold flex items-center gap-1.5 disabled:opacity-50"
+              className="px-4 py-2 bg-portal-primary text-portal-on-primary hover:bg-portal-primary-hover font-label-mono text-xs uppercase font-bold flex items-center gap-1.5 disabled:opacity-50"
             >
               <span className="material-symbols-outlined text-[16px]">{loading ? 'sync' : 'bolt'}</span>
               {loading ? 'Analyzing...' : 'Extract Criteria'}
@@ -160,7 +160,7 @@ export default function IndustryJDAnalyzerPage() {
 
               <Link
                 href="/industry/dashboard"
-                className="block w-full py-2.5 bg-[#FACC15] text-[#18181B] text-center font-label-mono text-xs uppercase font-bold"
+                className="block w-full py-2.5 bg-portal-primary hover:bg-portal-primary-hover text-portal-on-primary text-center font-label-mono text-xs uppercase font-bold transition-colors"
               >
                 Match Candidates Against Extracted Schema →
               </Link>

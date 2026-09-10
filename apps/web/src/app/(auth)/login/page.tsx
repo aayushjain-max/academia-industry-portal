@@ -10,11 +10,11 @@ export default function LoginPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
   const [selectedRole, setSelectedRole] = useState<'Student' | 'Academician' | 'Industry' | 'Institution'>('Student');
-  const [email, setEmail] = useState('aarav.sharma@iitb.ac.in');
-  const [password, setPassword] = useState('password123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [name, setName] = useState('');
-  const [entropyPercent, setEntropyPercent] = useState(70);
-  const [entropyLabel, setEntropyLabel] = useState('STANDARD (128-BIT)');
+  const [entropyPercent, setEntropyPercent] = useState(0);
+  const [entropyLabel, setEntropyLabel] = useState('EMPTY');
 
   const roleMap: Record<string, { label: string; route: string; port: string }> = {
     Student: { label: 'STUDENT NODE', route: '/student/dashboard', port: '8042' },
@@ -54,7 +54,13 @@ export default function LoginPage() {
     setIsLoading(true);
     setErrorMessage(null);
 
-    const mappedRole = selectedRole.toUpperCase() as 'STUDENT' | 'INDUSTRY' | 'INSTITUTION' | 'ACADEMICIAN' | 'ADMIN';
+    const roleMapping: Record<string, 'STUDENT' | 'INDUSTRY' | 'INSTITUTION_ADMIN' | 'ACADEMICIAN'> = {
+      Student: 'STUDENT',
+      Academician: 'ACADEMICIAN',
+      Industry: 'INDUSTRY',
+      Institution: 'INSTITUTION_ADMIN',
+    };
+    const mappedRole = roleMapping[selectedRole] || 'STUDENT';
     const destination = roleMap[selectedRole]?.route || '/student/dashboard';
 
     try {
@@ -78,6 +84,32 @@ export default function LoginPage() {
     }
   };
 
+
+  const handleDirectAuth = async (roleName: 'Student' | 'Academician' | 'Industry' | 'Institution') => {
+    setIsLoading(true);
+    setErrorMessage(null);
+    const destination = roleMap[roleName]?.route || '/student/dashboard';
+
+    const defaultEmails: Record<string, string> = {
+      Student: process.env.NEXT_PUBLIC_DEMO_STUDENT_EMAIL || 'aarav.sharma@iitb.ac.in',
+      Academician: process.env.NEXT_PUBLIC_DEMO_ACADEMICIAN_EMAIL || 'dr.raman@iitb.ac.in',
+      Industry: process.env.NEXT_PUBLIC_DEMO_INDUSTRY_EMAIL || 'talent@tcs.com',
+      Institution: process.env.NEXT_PUBLIC_DEMO_INSTITUTION_EMAIL || 'dean@iitb.ac.in',
+    };
+    const targetEmail = defaultEmails[roleName] || 'aarav.sharma@iitb.ac.in';
+    const demoPassword = process.env.NEXT_PUBLIC_DEMO_PASSWORD || 'AcadPortal@2026Secure';
+
+    try {
+      await loginUser({ email: targetEmail, password: demoPassword });
+      router.push(destination);
+    } catch (err: any) {
+      setErrorMessage(
+        err?.message || `Unable to fast-track login for ${roleName}. Please verify that backend is running and seeded.`
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <main className="flex-1 w-full max-w-[1440px] mx-auto grid grid-cols-1 lg:grid-cols-12 min-h-[calc(100vh-56px)]">
@@ -345,9 +377,10 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              className="w-full bg-accent-signal hover:bg-accent-signal-hover text-zinc-950 font-headline-sm text-[14px] uppercase tracking-wider py-3.5 px-4 flex items-center justify-center gap-2 border border-border-strong font-bold shadow-[2px_2px_0px_0px_#18181B] active:opacity-90 transition-all duration-150"
+              disabled={isLoading}
+              className="w-full bg-accent-signal hover:bg-accent-signal-hover text-zinc-950 font-headline-sm text-[14px] uppercase tracking-wider py-3.5 px-4 flex items-center justify-center gap-2 border border-border-strong font-bold shadow-[2px_2px_0px_0px_#18181B] active:opacity-90 transition-all duration-150 disabled:opacity-50"
             >
-              <span>{activeTab === 'login' ? 'ENTER AUTHENTICATED NODE' : 'REGISTER VERIFIED LEDGER NODE'}</span>
+              <span>{isLoading ? 'VERIFYING CREDENTIALS...' : activeTab === 'login' ? 'ENTER AUTHENTICATED NODE' : 'REGISTER VERIFIED LEDGER NODE'}</span>
               <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
             </button>
 
@@ -363,8 +396,9 @@ export default function LoginPage() {
             {/* Google Sign-in Button */}
             <button
               type="button"
-              onClick={() => router.push(roleMap[selectedRole]?.route || '/student/dashboard')}
-              className="w-full border-2 border-border-strong bg-bg-surface text-fg-primary py-2.5 px-4 font-label-mono text-label-mono hover:bg-bg-subtle transition-all uppercase flex items-center justify-center gap-2.5 font-bold shadow-[2px_2px_0px_0px_#18181B]"
+              onClick={() => handleDirectAuth(selectedRole)}
+              disabled={isLoading}
+              className="w-full border-2 border-border-strong bg-bg-surface text-fg-primary py-2.5 px-4 font-label-mono text-label-mono hover:bg-bg-subtle transition-all uppercase flex items-center justify-center gap-2.5 font-bold shadow-[2px_2px_0px_0px_#18181B] disabled:opacity-50"
             >
               <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
                 <path
@@ -390,8 +424,9 @@ export default function LoginPage() {
             {/* DigiLocker & Academic Bank of Credits Button */}
             <button
               type="button"
-              onClick={() => router.push(roleMap[selectedRole]?.route || '/student/dashboard')}
-              className="w-full border-2 border-border-strong bg-bg-surface text-fg-primary py-2.5 px-4 font-label-mono text-label-mono hover:bg-bg-subtle transition-all uppercase flex items-center justify-center gap-2 font-bold shadow-[2px_2px_0px_0px_#18181B]"
+              onClick={() => handleDirectAuth(selectedRole)}
+              disabled={isLoading}
+              className="w-full border-2 border-border-strong bg-bg-surface text-fg-primary py-2.5 px-4 font-label-mono text-label-mono hover:bg-bg-subtle transition-all uppercase flex items-center justify-center gap-2 font-bold shadow-[2px_2px_0px_0px_#18181B] disabled:opacity-50"
             >
               <span className="material-symbols-outlined text-status-success text-[18px]">verified</span>
               <span>SIGN IN WITH DIGILOCKER / ABC ID</span>
@@ -399,8 +434,9 @@ export default function LoginPage() {
 
             <button
               type="button"
-              onClick={() => router.push(roleMap[selectedRole]?.route || '/student/dashboard')}
-              className="w-full border border-border-strong text-fg-primary py-2 font-label-mono text-label-mono hover:bg-bg-subtle transition-colors uppercase flex items-center justify-center gap-2 font-medium text-xs"
+              onClick={() => handleDirectAuth(selectedRole)}
+              disabled={isLoading}
+              className="w-full border border-border-strong text-fg-primary py-2 font-label-mono text-label-mono hover:bg-bg-subtle transition-colors uppercase flex items-center justify-center gap-2 font-medium text-xs disabled:opacity-50"
             >
               <span className="material-symbols-outlined text-[15px]">fingerprint</span>
               <span>Direct Fast-Track Node Demo</span>
@@ -411,3 +447,4 @@ export default function LoginPage() {
     </main>
   );
 }
+

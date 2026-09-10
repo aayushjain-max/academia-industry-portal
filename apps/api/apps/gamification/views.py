@@ -17,7 +17,7 @@ class LeaderboardViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = UserGamificationSerializer
     permission_classes = [permissions.IsAuthenticated]
 
-    @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
+    @action(detail=False, methods=['get'], url_path='my-stats', permission_classes=[permissions.IsAuthenticated])
     def my_stats(self, request):
         user = request.user
         gamification, created = UserGamification.objects.get_or_create(
@@ -32,8 +32,8 @@ class LeaderboardViewSet(viewsets.ReadOnlyModelViewSet):
         if hasattr(user, 'student_profile'):
             sp = user.student_profile
             app_points = Application.objects.filter(student=sp).count() * 10
-            cert_points = Certification.objects.filter(student=sp).count() * 50 if hasattr(Certification, 'student') else 0
-            proj_points = Project.objects.filter(creator=user).count() * 75 if hasattr(Project, 'creator') else 0
+            cert_points = Certification.objects.filter(student=sp).count() * 50
+            proj_points = Project.objects.filter(student=sp).count() * 75
             computed_total = max(gamification.total_points, app_points + cert_points + proj_points)
             gamification.total_points = computed_total
 

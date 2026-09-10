@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 
 export default function VerifyPhonePage() {
   const router = useRouter();
-  const [phone, setPhone] = useState('+91 98765 43210');
+  const [phone, setPhone] = useState('');
   const [code, setCode] = useState('');
   const [step, setStep] = useState<'request' | 'verify'>('request');
   const [verified, setVerified] = useState(false);
@@ -53,6 +53,7 @@ export default function VerifyPhonePage() {
                   <input
                     type="tel"
                     required
+                    placeholder="+91 98765 43210"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
                     className="w-full bg-bg-canvas border border-border-strong px-3 py-2.5 text-xs font-mono text-fg-primary focus:outline-none focus:ring-1 focus:ring-fg-primary"

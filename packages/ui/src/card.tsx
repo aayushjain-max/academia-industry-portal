@@ -2,14 +2,15 @@ import React from 'react';
 import { cn } from './utils';
 
 export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
-  variant?: 'default' | 'accent' | 'dark' | 'subtle';
+  variant?: 'default' | 'accent' | 'portal' | 'dark' | 'subtle';
 }
 
 export const Card = React.forwardRef<HTMLDivElement, CardProps>(
   ({ className, variant = 'default', children, ...props }, ref) => {
     const variantStyles: Record<string, string> = {
       default: 'bg-bg-surface border border-border-strong text-fg-primary',
-      accent: 'bg-bg-surface border-2 border-accent-signal text-fg-primary',
+      accent: 'bg-bg-surface border-2 border-portal-primary text-fg-primary',
+      portal: 'bg-bg-surface border-2 border-portal-primary text-fg-primary',
       dark: 'bg-neutral-950 border border-border-strong text-bg-surface',
       subtle: 'bg-bg-subtle/50 border border-border-hairline text-fg-primary',
     };

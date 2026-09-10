@@ -28,7 +28,8 @@ export interface ApplicationItem {
 }
 
 export const listApplications = async (): Promise<ApplicationItem[]> => {
-  return apiClient.get<ApplicationItem[]>('/applications/');
+  const res: any = await apiClient.get<any>('/applications/');
+  return Array.isArray(res) ? res : res?.results || [];
 };
 
 export const applyToOpportunity = async (payload: {

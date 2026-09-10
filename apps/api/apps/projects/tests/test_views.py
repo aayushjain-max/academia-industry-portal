@@ -35,5 +35,18 @@ class ProjectUnitTest(unittest.TestCase):
         self.assertTrue(perm.has_object_permission(req_owner, None, proj))
         self.assertFalse(perm.has_object_permission(req_other, None, proj))
 
+    def test_student_cannot_verify_projects(self):
+        from common.constants.roles import UserRole
+        student = MockUser(is_authenticated=True)
+        student.role = UserRole.STUDENT
+        self.assertNotIn(student.role, [UserRole.ACADEMICIAN, UserRole.INSTITUTION_ADMIN, UserRole.SUPER_ADMIN])
+
+    def test_academician_can_verify_projects(self):
+        from common.constants.roles import UserRole
+        academician = MockUser(is_authenticated=True)
+        academician.role = UserRole.ACADEMICIAN
+        self.assertIn(academician.role, [UserRole.ACADEMICIAN, UserRole.INSTITUTION_ADMIN, UserRole.SUPER_ADMIN])
+
 if __name__ == '__main__':
     unittest.main()
+

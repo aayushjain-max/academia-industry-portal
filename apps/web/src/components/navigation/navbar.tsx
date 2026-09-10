@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { LanguageSwitcher } from './language-switcher';
 
 export const Navbar: React.FC = () => {
   const pathname = usePathname();
@@ -38,6 +39,8 @@ export const Navbar: React.FC = () => {
 
           {/* Trailing Controls & Role Switcher Matrix */}
           <div className="flex items-center gap-space-sm">
+            <LanguageSwitcher />
+
             <button
               type="button"
               className="p-2 text-fg-primary hover:bg-bg-subtle transition-colors duration-150 border border-transparent hover:border-border-strong"

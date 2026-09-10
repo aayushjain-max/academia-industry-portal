@@ -44,18 +44,35 @@ class UserLearningProgressViewSet(viewsets.ModelViewSet):
         student_profile = self.request.user.student_profile
         serializer.save(student=student_profile)
 
+from common.constants.roles import UserRole
+from apps.opportunities.permissions import OpportunityPermission
+
 class IndustryTrainingViewSet(viewsets.ModelViewSet):
-    queryset = IndustryTraining.objects.select_related('industry').filter(is_active=True)
     serializer_class = IndustryTrainingSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, OpportunityPermission]
+
+    def get_queryset(self):
+        user = self.request.user
+        if not user or not user.is_authenticated:
+            return IndustryTraining.objects.select_related('industry').filter(is_active=True)
+        if user.is_staff or user.role == UserRole.SUPER_ADMIN:
+            return IndustryTraining.objects.select_related('industry').all()
+        if hasattr(user, 'industry_profile') and user.role == UserRole.INDUSTRY:
+            if self.action in ['update', 'partial_update', 'destroy']:
+                return IndustryTraining.objects.select_related('industry').filter(industry=user.industry_profile)
+            return (IndustryTraining.objects.select_related('industry').filter(is_active=True) |
+                    IndustryTraining.objects.select_related('industry').filter(industry=user.industry_profile)).distinct()
+        return IndustryTraining.objects.select_related('industry').filter(is_active=True)
 
     def get_permissions(self):
         if self.action in ['list', 'retrieve']:
             return [permissions.AllowAny()]
-        return super().get_permissions()
+        return [permissions.IsAuthenticated(), OpportunityPermission()]
 
     def perform_create(self, serializer):
         industry_profile = getattr(self.request.user, 'industry_profile', None)
+        if not industry_profile and not (self.request.user.is_staff or self.request.user.role == UserRole.SUPER_ADMIN):
+            raise permissions.exceptions.PermissionDenied("Only industry recruiters or administrators can create training programs.")
         if industry_profile:
             serializer.save(industry=industry_profile)
         else:

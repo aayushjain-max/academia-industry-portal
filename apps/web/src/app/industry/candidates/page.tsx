@@ -39,7 +39,7 @@ export default function IndustryCandidatesPage() {
                 <span className="font-headline-sm text-body-lg font-bold text-fg-primary">Aarav Sharma</span>
                 <span className="font-label-mono text-xs text-fg-muted block">IIT BOMBAY // B.TECH CS (9.32 CGPA)</span>
               </div>
-              <span className="px-2 py-0.5 bg-[#FACC15] text-[#18181B] font-label-mono text-xs font-bold">
+              <span className="px-2 py-0.5 bg-portal-primary text-portal-on-primary font-label-mono text-xs font-bold">
                 98.4% MATCH
               </span>
             </div>
@@ -60,7 +60,7 @@ export default function IndustryCandidatesPage() {
                 <span className="font-headline-sm text-body-lg font-bold text-fg-primary">Priya Venkatesh</span>
                 <span className="font-label-mono text-xs text-fg-muted block">IIIT HYDERABAD // AEROSPACE (9.18 CGPA)</span>
               </div>
-              <span className="px-2 py-0.5 bg-[#FACC15] text-[#18181B] font-label-mono text-xs font-bold">
+              <span className="px-2 py-0.5 bg-portal-primary text-portal-on-primary font-label-mono text-xs font-bold">
                 94.2% MATCH
               </span>
             </div>
@@ -68,7 +68,7 @@ export default function IndustryCandidatesPage() {
               Specialization: Embedded C++20, Rust, RTOS, FPGA Verilog, Satellite Telemetry Processing.
             </p>
             <div className="pt-2 border-t border-border-hairline flex justify-between items-center text-xs">
-              <span className="text-accent-signal font-semibold">★ Offer Extended Stage</span>
+              <span className="text-portal-primary font-semibold">★ Offer Extended Stage</span>
               <Link href="/industry/dashboard" className="text-fg-primary underline font-bold">
                 Review Dossier →
               </Link>

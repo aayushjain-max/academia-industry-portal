@@ -40,7 +40,7 @@ export const NodePageShell: React.FC<NodePageShellProps> = ({
       <div className="border border-border-hairline bg-bg-surface px-space-md py-space-sm">
         <div className="flex flex-wrap items-center justify-between gap-space-sm text-xs font-label-mono text-fg-muted">
           <div className="flex items-center gap-space-sm flex-wrap">
-            <span className="w-2 h-2 bg-accent-signal border border-border-strong inline-block" />
+            <span className="w-2 h-2 bg-portal-primary border border-border-strong inline-block" />
             <span className="uppercase tracking-widest text-fg-primary font-bold">
               NODE: {nodeId}
             </span>
@@ -61,7 +61,7 @@ export const NodePageShell: React.FC<NodePageShellProps> = ({
           <div className="max-w-3xl">
             {category && (
               <div className="flex items-center gap-2 mb-1.5">
-                <span className="w-2 h-2 bg-primary inline-block shrink-0" />
+                <span className="w-2 h-2 bg-portal-primary inline-block shrink-0" />
                 <span className="font-label-mono text-[11px] tracking-widest uppercase text-fg-muted font-bold">
                   // {category}
                 </span>

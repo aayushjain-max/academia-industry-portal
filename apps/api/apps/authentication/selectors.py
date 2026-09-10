@@ -1,5 +1,2 @@
-# Data query & selector layer for authentication
+# Selector module for authentication
 from .models import *
-
-def get_authentication_list():
-    return (AuthenticationItem if 'authentication' != 'users' else User).objects.all()

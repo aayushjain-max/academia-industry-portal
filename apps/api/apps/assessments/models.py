@@ -87,5 +87,13 @@ class AssessmentAttempt(models.Model):
     class Meta:
         ordering = ['-started_at']
 
+    @property
+    def percentage(self):
+        return self.score_percentage
+
+    @property
+    def score(self):
+        return self.score_raw
+
     def __str__(self):
         return f"Attempt: {self.student.user.email} - {self.assessment.title} ({self.score_percentage}%)"

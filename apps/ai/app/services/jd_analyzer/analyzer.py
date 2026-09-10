@@ -36,7 +36,7 @@ def extract_salary(text: str) -> str:
         m = re.search(p, text, re.IGNORECASE)
         if m:
             return m.group(1).strip()
-    return "Competitive Market Standard (Stipend / CTC)"
+    return "Not Specified (Negotiable)"
 
 def extract_location(text: str) -> str:
     loc_match = re.search(r'(?:location|workplace|city)\s*[:\-]\s*([^\n\r,]+)', text, re.IGNORECASE)
@@ -46,7 +46,7 @@ def extract_location(text: str) -> str:
         return "Remote"
     if re.search(r'\bhybrid\b', text, re.IGNORECASE):
         return "Hybrid"
-    return "Bangalore / Mumbai / Pune (On-site / Hybrid)"
+    return "Not Specified"
 
 def analyze_jd(text: str):
     extracted_skills = extract_skills_from_text(text)

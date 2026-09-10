@@ -8,8 +8,9 @@ class CertificationPermission(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         if not (request.user and request.user.is_authenticated):
             return False
-        if request.user.is_staff or request.user.is_superuser or request.user.role == UserRole.SUPER_ADMIN:
+        if request.user.is_staff or request.user.is_superuser or request.user.role in [UserRole.SUPER_ADMIN, UserRole.ACADEMICIAN, UserRole.INSTITUTION_ADMIN]:
             return True
+
         if request.method in permissions.SAFE_METHODS:
             return True
         if hasattr(obj, 'student') and hasattr(request.user, 'student_profile'):

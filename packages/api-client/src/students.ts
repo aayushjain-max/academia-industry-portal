@@ -44,14 +44,16 @@ export class StudentsApi {
   }
 
   async getCareerRoles() {
-    return this.client.request<any>('/career/roles/');
+    return this.client.request<any>('/career/paths/');
   }
 
-  async calculateReadiness(targetRoleId: string) {
-    return this.client.request<any>('/career/readiness/calculate/', {
-      method: 'POST',
-      body: JSON.stringify({ target_role_id: targetRoleId }),
-    });
+  async calculateReadiness(targetRole?: string) {
+    const url = targetRole ? `/career/readiness/?target_role=${encodeURIComponent(targetRole)}` : '/career/readiness/';
+    return this.client.request<any>(url);
+  }
+
+  async getCareerActionPlan() {
+    return this.client.request<any>('/career/action-plan/');
   }
 
   async getAssessments(category?: string) {

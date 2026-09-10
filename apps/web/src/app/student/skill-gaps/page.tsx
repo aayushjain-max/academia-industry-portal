@@ -40,8 +40,8 @@ export default function SkillGapsPage() {
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-space-md">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 bg-accent-signal border border-border-strong inline-block" />
-              <span className="font-label-mono text-label-mono text-accent-signal uppercase font-bold tracking-wider">
+              <span className="w-2.5 h-2.5 bg-portal-primary border border-border-strong inline-block" />
+              <span className="font-label-mono text-label-mono text-portal-primary uppercase font-bold tracking-wider">
                 PRIMARY SYSTEMIC BOTTLENECK // CRITICAL DEFICIT #01
               </span>
             </div>
@@ -49,7 +49,7 @@ export default function SkillGapsPage() {
               Docker &amp; Container Orchestration (Current: 40% vs Target: 70%)
             </h2>
             <p className="text-body-sm text-neutral-400 max-w-2xl">
-              Closing this gap directly unlocks <strong className="text-accent-signal">4 Tier-1 Enterprise Requisitions</strong> (Direct intake by NPCI, Bharat Electronics, and Cisco Research).
+              Closing this gap directly unlocks <strong className="text-portal-primary">4 Tier-1 Enterprise Requisitions</strong> (Direct intake by NPCI, Bharat Electronics, and Cisco Research).
             </p>
           </div>
 
@@ -57,7 +57,7 @@ export default function SkillGapsPage() {
             <button
               type="button"
               onClick={() => setShowEnrollModal(true)}
-              className="px-space-md py-2.5 bg-accent-signal text-fg-primary font-label-mono text-label-mono uppercase font-bold hover:bg-accent-signal-hover transition-colors flex items-center justify-center gap-1.5 border border-border-strong shadow-[2px_2px_0px_0px_#FFFFFF]"
+              className="px-space-md py-2.5 bg-portal-primary text-portal-on-primary font-label-mono text-label-mono uppercase font-bold hover:bg-portal-primary-hover transition-colors flex items-center justify-center gap-1.5 border border-border-strong shadow-[2px_2px_0px_0px_#FFFFFF]"
             >
               <span className="material-symbols-outlined text-[18px]">bolt</span>
               <span>EXPEDITE GAP RESOLUTION</span>
@@ -75,7 +75,7 @@ export default function SkillGapsPage() {
           <div className="bg-bg-surface border-2 border-border-strong max-w-lg w-full p-space-lg shadow-2xl space-y-4">
             <div className="flex items-center justify-between border-b border-border-hairline pb-2">
               <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 bg-accent-signal" />
+                <span className="w-2.5 h-2.5 bg-portal-primary" />
                 <h3 className="font-headline-sm uppercase font-bold text-fg-primary">
                   1-Click Gap Remediation Action Plan
                 </h3>
@@ -123,7 +123,7 @@ export default function SkillGapsPage() {
                   setEnrolled(true);
                   setShowEnrollModal(false);
                 }}
-                className="px-4 py-2 bg-accent-signal text-fg-primary border border-border-strong font-label-mono text-xs uppercase font-bold hover:bg-accent-signal-hover shadow-[2px_2px_0px_0px_#18181B]"
+                className="px-4 py-2 bg-portal-primary text-portal-on-primary border border-border-strong font-label-mono text-xs uppercase font-bold hover:bg-portal-primary-hover shadow-[2px_2px_0px_0px_#18181B]"
               >
                 Confirm &amp; Launch Pod
               </button>
@@ -168,7 +168,7 @@ export default function SkillGapsPage() {
             <div>
               <div className="flex flex-wrap items-center justify-between gap-2 mb-space-sm">
                 <div className="flex items-center gap-2">
-                  <span className="bg-accent-signal text-fg-primary font-label-mono text-[11px] px-2 py-0.5 font-bold uppercase border border-border-strong">
+                  <span className="bg-portal-primary text-portal-on-primary font-label-mono text-[11px] px-2 py-0.5 font-bold uppercase border border-border-strong">
                     GAP BRIDGE // IN PROGRESS
                   </span>
                   <span className="bg-bg-subtle text-fg-muted font-label-mono text-[11px] px-2 py-0.5 uppercase border border-border-hairline">
@@ -211,8 +211,8 @@ export default function SkillGapsPage() {
                   <span className="material-symbols-outlined text-status-success text-[18px]">check_box</span>
                   <span>02. Multi-stage Production Builds</span>
                 </div>
-                <div className="flex items-center gap-2 bg-yellow-50 border border-accent-signal p-2">
-                  <span className="material-symbols-outlined text-status-warning text-[18px]">indeterminate_check_box</span>
+                <div className="flex items-center gap-2 bg-portal-primary-soft border border-portal-primary/30 p-2">
+                  <span className="material-symbols-outlined text-portal-primary text-[18px]">indeterminate_check_box</span>
                   <span className="font-bold text-fg-primary">03. Docker Compose &amp; Microservice Mesh</span>
                 </div>
                 <div className="flex items-center gap-2 bg-bg-canvas border border-border-hairline p-2 opacity-50">
@@ -229,7 +229,7 @@ export default function SkillGapsPage() {
               </div>
               <button
                 type="button"
-                className="px-space-md py-2 bg-fg-primary text-bg-surface font-label-mono text-label-mono uppercase hover:bg-accent-signal hover:text-fg-primary transition-colors flex items-center gap-1 border border-border-strong font-bold"
+                className="px-space-md py-2 bg-fg-primary text-bg-surface font-label-mono text-label-mono uppercase hover:bg-portal-primary hover:text-portal-on-primary transition-colors flex items-center gap-1 border border-border-strong font-bold"
               >
                 <span className="material-symbols-outlined text-[16px]">play_arrow</span>
                 <span>RESUME LEARNING (SANDBOX #04)</span>
@@ -322,7 +322,7 @@ export default function SkillGapsPage() {
           <div className="lg:col-span-6 bg-bg-surface border border-border-strong p-space-lg flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between mb-space-sm">
-                <span className="bg-yellow-50 text-status-danger font-label-mono text-[11px] px-2 py-0.5 font-bold uppercase border border-border-hairline">
+                <span className="bg-portal-primary-soft text-portal-primary font-label-mono text-[11px] px-2 py-0.5 font-bold uppercase border border-portal-primary/30">
                   MICRO-LEARNING SPRINT
                 </span>
                 <span className="font-label-mono text-label-mono text-status-success font-semibold">+100 XP</span>
@@ -349,7 +349,7 @@ export default function SkillGapsPage() {
               <span className="font-label-mono text-xs text-fg-muted">ESTIMATED EFFORT: 180 MINS</span>
               <button
                 type="button"
-                className="px-space-md py-2 bg-fg-primary text-bg-surface font-label-mono text-label-mono uppercase hover:bg-accent-signal hover:text-fg-primary transition-colors flex items-center gap-1 border border-border-strong font-bold"
+                className="px-space-md py-2 bg-fg-primary text-bg-surface font-label-mono text-label-mono uppercase hover:bg-portal-primary hover:text-portal-on-primary transition-colors flex items-center gap-1 border border-border-strong font-bold"
               >
                 <span className="material-symbols-outlined text-[16px]">code</span>
                 <span>START SPRINT SANDBOX</span>

@@ -44,7 +44,7 @@ export const notificationsApi = {
 
   markAsRead: async (id: string) => {
     try {
-      return await apiClient.post(`/notifications/${id}/mark_read/`, {});
+      return await apiClient.post(`/notifications/${id}/read/`, {});
     } catch {
       return { success: true };
     }
@@ -52,7 +52,7 @@ export const notificationsApi = {
 
   markAllAsRead: async () => {
     try {
-      return await apiClient.post('/notifications/mark_all_read/', {});
+      return await apiClient.post('/notifications/mark-all-read/', {});
     } catch {
       return { success: true };
     }

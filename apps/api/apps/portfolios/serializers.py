@@ -26,3 +26,6 @@ class PublicPortfolioSerializer(serializers.Serializer):
     achievements = serializers.ListField(child=serializers.CharField())
     isPublic = serializers.BooleanField()
 
+PortfolioSerializer = DigitalPortfolioSerializer
+
+

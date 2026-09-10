@@ -4,11 +4,25 @@ from rest_framework.response import Response
 from .models import DigitalPortfolio
 from .serializers import DigitalPortfolioSerializer, PublicPortfolioSerializer
 from apps.students.models import StudentProfile
+from common.permissions.object_permissions import IsOwnerOrAdmin
+
+from common.constants.roles import UserRole
 
 class DigitalPortfolioViewSet(viewsets.ModelViewSet):
-    queryset = DigitalPortfolio.objects.select_related('student__user').all()
     serializer_class = DigitalPortfolioSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsOwnerOrAdmin]
+
+    def get_queryset(self):
+        user = self.request.user
+        if not user or not user.is_authenticated:
+            return DigitalPortfolio.objects.filter(is_public=True)
+        if user.is_staff or user.role in [UserRole.SUPER_ADMIN, UserRole.INSTITUTION_ADMIN, UserRole.ACADEMICIAN, UserRole.INDUSTRY]:
+            return DigitalPortfolio.objects.select_related('student__user').all()
+        student_profile = getattr(user, 'student_profile', None)
+        if student_profile:
+            return (DigitalPortfolio.objects.select_related('student__user').filter(student=student_profile) | 
+                    DigitalPortfolio.objects.select_related('student__user').filter(is_public=True)).distinct()
+        return DigitalPortfolio.objects.filter(is_public=True)
 
     @action(detail=False, methods=['get', 'patch', 'put'])
     def me(self, request):

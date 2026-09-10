@@ -7,4 +7,6 @@ class SecurityHeadersMiddleware:
         response['X-Content-Type-Options'] = 'nosniff'
         response['X-Frame-Options'] = 'DENY'
         response['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+        response['Cross-Origin-Opener-Policy'] = 'same-origin'
+        response['Permissions-Policy'] = 'camera=(), microphone=(), geolocation=()'
         return response

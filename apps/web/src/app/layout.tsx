@@ -1,17 +1,22 @@
 import './globals.css';
 import React from 'react';
 import { Inter, JetBrains_Mono } from 'next/font/google';
+import { Providers } from '@/components/providers/Providers';
 
 const inter = Inter({
   subsets: ['latin'],
   variable: '--font-inter',
   display: 'swap',
+  fallback: ['system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'sans-serif'],
+  adjustFontFallback: false,
 });
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ['latin'],
   variable: '--font-jetbrains',
   display: 'swap',
+  fallback: ['ui-monospace', 'SFMono-Regular', 'Consolas', 'Courier New', 'monospace'],
+  adjustFontFallback: false,
 });
 
 export const metadata = {
@@ -29,7 +34,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className="min-h-screen bg-bg-canvas text-fg-primary antialiased font-body-md flex flex-col">
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

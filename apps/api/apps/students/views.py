@@ -11,29 +11,43 @@ from .serializers import (
     PublicPortfolioSerializer
 )
 
+from common.permissions.object_permissions import IsOwnerOrAdmin
+
+from common.constants.roles import UserRole
+
 class StudentProfileViewSet(viewsets.ModelViewSet):
     queryset = StudentProfile.objects.select_related('user').all()
     serializer_class = StudentProfileSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsOwnerOrAdmin]
 
     def get_queryset(self):
-        return self.queryset
+        user = self.request.user
+        if not user or not user.is_authenticated:
+            return StudentProfile.objects.none()
+        if user.is_staff or user.role in [UserRole.SUPER_ADMIN, UserRole.INSTITUTION_ADMIN, UserRole.ACADEMICIAN, UserRole.INDUSTRY]:
+            return StudentProfile.objects.select_related('user').all()
+        return StudentProfile.objects.select_related('user').filter(user=user)
 
     @action(detail=False, methods=['get', 'patch', 'put'], permission_classes=[permissions.IsAuthenticated])
     def me(self, request):
-        profile, _ = StudentProfile.objects.get_or_create(
-            user=request.user,
-            defaults={
-                'degree': 'B.Tech',
-                'portfolio_slug': request.user.email.split('@')[0]
-            }
-        )
+        profile = StudentProfile.objects.filter(user=request.user).first()
+        if not profile:
+            base_slug = request.user.email.split('@')[0].lower()
+            slug = base_slug
+            if StudentProfile.objects.filter(portfolio_slug=slug).exists():
+                slug = f"{base_slug}-{uuid.uuid4().hex[:6]}"
+            profile = StudentProfile.objects.create(
+                user=request.user,
+                degree='B.Tech',
+                portfolio_slug=slug
+            )
 
         if request.method in ['PATCH', 'PUT']:
             serializer = self.get_serializer(profile, data=request.data, partial=True)
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return Response(serializer.data)
+
 
         serializer = self.get_serializer(profile)
         return Response(serializer.data)

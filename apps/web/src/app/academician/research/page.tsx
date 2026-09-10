@@ -1,213 +1,488 @@
 'use client';
 
-import React from 'react';
-import Link from 'next/link';
+import React, { useState, useEffect } from 'react';
+import { NodePageShell } from '@/components/dashboard/node-page-shell';
+import { Button, Badge, Card } from '@portal/ui';
+import { Icon } from '@/components/ui/icon';
+import {
+  getResearchProjects,
+  createResearchProject,
+  addProjectMilestone,
+  addProjectMember,
+  ResearchProject,
+} from '@/features/academicians/api';
+import { Loader2, Plus, AlertCircle, CheckCircle2 } from 'lucide-react';
 
-export default function ResearchPage() {
-  const team = [
-    { role: 'PI', name: 'Dr. Arisudan Sengupta', desc: 'Faculty Principal Investigator • High-Performance Computing', tag: 'IIT-B / H-Index 28', bg: 'bg-[#18181B] text-[#FACC15]' },
-    { role: 'CI', name: 'Dr. Nandita Ramanathan', desc: 'Faculty Co-Investigator • Embedded Cryptography', tag: 'Faculty // ECE Dept', bg: 'bg-neutral-200 text-fg-primary' },
-    { role: 'IND', name: 'Vikram Malhotra & K. Srivastav', desc: 'Industry R&D Leads • TechNova Embedded Avionics Division', tag: 'Corporate Partner', bg: 'bg-accent-signal text-fg-primary' },
-    { role: 'JRF', name: 'Graduate Research Scholars (4 Fellows)', desc: 'T. Sen, P. Joshi, M. Al-Farooq, R. Sundaram • JRF Stipends Active', tag: 'DRDO Fellowships Active', bg: 'bg-neutral-200 text-fg-primary' },
-  ];
+export default function AcademicianResearchPage() {
+  const [projects, setProjects] = useState<ResearchProject[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const milestones = [
-    { id: 'M-01', title: 'Formal Verification of Fault-Tolerant Consensus State Machine', status: 'COMPLETED', progress: 100, date: 'APR 2024' },
-    { id: 'M-02', title: 'Xilinx Zynq UltraScale+ FPGA RTL Hardware Synthesis', status: 'COMPLETED', progress: 100, date: 'AUG 2024' },
-    { id: 'M-03', title: 'Radiation Hardening Simulation & Hardware-in-Loop Testbed', status: 'IN PROGRESS', progress: 65, date: 'NOV 2024', active: true },
-    { id: 'M-04', title: 'Avionics Bus In-Flight Telemetry Validation at DRDO Range', status: 'SCHEDULED', progress: 0, date: 'MAY 2025' },
-  ];
+  // Modals
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [selectedProjectForMilestone, setSelectedProjectForMilestone] = useState<ResearchProject | null>(null);
+  const [selectedProjectForMember, setSelectedProjectForMember] = useState<ResearchProject | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
-  const budget = [
-    { head: 'Hardware Capital & FPGA Racks', allocated: '₹24,50,000', spent: '₹21,80,000', percent: 89 },
-    { head: 'Junior Research Fellowships (4 JRFs)', allocated: '₹14,40,000', spent: '₹8,20,000', percent: 57 },
-    { head: 'Field Testing & Range Telemetry', allocated: '₹6,00,000', spent: '₹2,10,000', percent: 35 },
-    { head: 'Institutional Overheads (IIT-B)', allocated: '₹3,60,000', spent: '₹3,60,000', percent: 100 },
-  ];
+  // Forms
+  const [projectForm, setProjectForm] = useState({
+    title: '',
+    description: '',
+    research_area: '',
+    funding_amount: 1000000,
+    funding_agency: '',
+    industry_partner: '',
+    status: 'ACTIVE' as ResearchProject['status'],
+  });
+
+  const [milestoneForm, setMilestoneForm] = useState({
+    title: '',
+    description: '',
+    due_date: '',
+    progress_percentage: 0,
+    status: 'PENDING' as const,
+  });
+
+  const [memberForm, setMemberForm] = useState({
+    name: '',
+    role: 'CO_PI' as const,
+    email: '',
+    affiliation: '',
+  });
+
+  const loadProjects = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await getResearchProjects();
+      setProjects(res.results || []);
+    } catch (err: any) {
+      console.error('Failed to load research projects', err);
+      setError(err?.message || 'Failed to fetch research projects from repository.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadProjects();
+  }, []);
+
+  const handleCreateProject = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      await createResearchProject(projectForm);
+      setShowCreateModal(false);
+      setProjectForm({
+        title: '',
+        description: '',
+        research_area: '',
+        funding_amount: 1000000,
+        funding_agency: '',
+        industry_partner: '',
+        status: 'ACTIVE',
+      });
+      loadProjects();
+    } catch (err: any) {
+      alert(err?.message || 'Failed to create research project');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleAddMilestone = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedProjectForMilestone) return;
+    setSubmitting(true);
+    try {
+      await addProjectMilestone(selectedProjectForMilestone.id, milestoneForm);
+      setSelectedProjectForMilestone(null);
+      setMilestoneForm({ title: '', description: '', due_date: '', progress_percentage: 0, status: 'PENDING' });
+      loadProjects();
+    } catch (err: any) {
+      alert(err?.message || 'Failed to add milestone');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleAddMember = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedProjectForMember) return;
+    setSubmitting(true);
+    try {
+      await addProjectMember(selectedProjectForMember.id, memberForm);
+      setSelectedProjectForMember(null);
+      setMemberForm({ name: '', role: 'CO_PI', email: '', affiliation: '' });
+      loadProjects();
+    } catch (err: any) {
+      alert(err?.message || 'Failed to add team member');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const totalFunding = projects.reduce((acc, p) => acc + Number(p.funding_amount || 0), 0);
+  const activeCount = projects.filter((p) => p.status === 'ACTIVE').length;
+  const totalMilestones = projects.reduce((acc, p) => acc + (p.milestones?.length || 0), 0);
+  const totalMembers = projects.reduce((acc, p) => acc + (p.members?.length || 0), 0);
 
   return (
-    <div className="space-y-space-lg">
-      {/* Project Chronos Docket Hero Panel */}
-      <div className="bg-bg-surface border border-border-strong p-space-lg space-y-space-md">
-        <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-space-md">
-          <div className="space-y-1">
-            <div className="flex items-center gap-space-xs mb-1">
-              <span className="bg-fg-primary text-accent-signal px-2 py-0.5 font-label-mono text-[10px] uppercase font-bold">
-                ACTIVE GRANT // R&amp;D
-              </span>
-              <span className="bg-bg-subtle text-fg-secondary px-2 py-0.5 font-label-mono text-[10px] border border-border-hairline">
-                DEF-AERO-2023-882
-              </span>
-              <span className="font-label-mono text-xs text-status-success flex items-center gap-1 ml-2 font-semibold">
-                <span className="w-2 h-2 rounded-full bg-status-success" />
-                LIVE LAB TELEMETRY
-              </span>
-            </div>
-            <h1 className="font-headline-md text-headline-md font-bold text-fg-primary">
-              Project Chronos: Distributed Fault-Tolerant Consensus for Aerospace Edge Computing
-            </h1>
-            <p className="text-body-sm text-fg-muted">
-              Joint Initiative: <strong className="text-fg-primary font-semibold">DRDO Aerospace Systems Division</strong> &amp; <strong className="text-fg-primary font-semibold">TechNova Avionics Labs</strong>
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2 shrink-0">
-            <button className="px-space-md py-2.5 bg-fg-primary text-bg-surface font-label-mono text-xs uppercase hover:bg-neutral-800 transition-colors flex items-center gap-1.5 border border-border-strong font-bold">
-              <span className="material-symbols-outlined text-[16px] text-accent-signal">lock</span>
-              <span>Access Sandbox Node</span>
-            </button>
-          </div>
+    <NodePageShell
+      nodeId="LAB-PODS-01"
+      nodeStatus="R&D MATRIX ACTIVE"
+      category="RESEARCH MANAGEMENT & CO-INVESTIGATION PODS"
+      title="R&D Projects, Lab Pods & Milestones"
+      description="Manage sponsored research projects, team investigations, milestones, funding tranches, and bilateral industry deliverables."
+      actions={
+        <Button variant="signal" size="sm" onClick={() => setShowCreateModal(true)}>
+          <Plus className="w-3.5 h-3.5 mr-1" />
+          Launch New Research Project
+        </Button>
+      }
+      kpis={[
+        { label: 'Active Projects', value: activeCount.toString(), delta: `${projects.length} TOTAL`, deltaType: 'success', subtext: 'Currently Investigating', icon: 'biotech' },
+        { label: 'Total Grant Funding', value: `₹${(totalFunding / 100000).toFixed(1)} L`, delta: 'SANCTIONED', deltaType: 'success', subtext: 'Across Active Grants', icon: 'payments' },
+        { label: 'Appointed Researchers', value: totalMembers.toString(), delta: 'INTER-DISCIPLINARY', deltaType: 'neutral', subtext: 'PIs, Fellows & Scholars', icon: 'group' },
+        { label: 'Tracked Milestones', value: totalMilestones.toString(), delta: 'STATUTORY', deltaType: 'neutral', subtext: 'Deliverables & Audits', icon: 'flag' },
+      ]}
+    >
+      {loading ? (
+        <div className="flex flex-col items-center justify-center min-h-[350px] space-y-3">
+          <Loader2 className="w-8 h-8 animate-spin text-fg-primary" />
+          <span className="font-label-mono text-xs uppercase text-fg-muted">
+            Synchronizing research pods &amp; telemetry...
+          </span>
         </div>
-
-        {/* Tabular Strip */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-space-md p-space-md bg-bg-subtle border border-border-hairline font-mono text-xs">
-          <div>
-            <span className="text-fg-muted uppercase block text-[10px]">APPROVED GRANT</span>
-            <span className="font-metric-tabular text-xl font-bold text-fg-primary block mt-0.5 tnum">₹48,50,000</span>
-            <span className="text-status-success text-[10px] block font-bold">Tranche 2 Disbursed (68%)</span>
-          </div>
-          <div>
-            <span className="text-fg-muted uppercase block text-[10px]">ACTIVE PERIOD</span>
-            <span className="font-metric-tabular text-xl font-bold text-fg-primary block mt-0.5 tnum">M-07 / 18</span>
-            <span className="text-fg-muted text-[10px] block">Expiry: Nov 30, 2025</span>
-          </div>
-          <div>
-            <span className="text-fg-muted uppercase block text-[10px]">LEAD INVESTIGATOR</span>
-            <span className="font-bold text-fg-primary block mt-1">Dr. Arisudan Sengupta</span>
-            <span className="text-fg-muted text-[10px] block">Dept. of Computer Science</span>
-          </div>
-          <div>
-            <span className="text-fg-muted uppercase block text-[10px]">INDUSTRY CO-PI</span>
-            <span className="font-bold text-fg-primary block mt-1">Vikram Malhotra</span>
-            <span className="text-fg-muted text-[10px] block">VP Autonomous Systems, TechNova</span>
-          </div>
+      ) : error ? (
+        <div className="p-space-lg bg-bg-surface border border-status-danger/40 text-center space-y-2">
+          <AlertCircle className="w-8 h-8 text-status-danger mx-auto" />
+          <p className="font-mono text-xs text-status-danger">{error}</p>
+          <Button variant="outline" size="sm" onClick={loadProjects}>Retry</Button>
         </div>
-      </div>
-
-      {/* 12-Column Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-space-lg items-start">
-        {/* Left Column (7 cols): Investigation Team & Milestones */}
-        <div className="lg:col-span-7 space-y-space-lg">
-          {/* Investigation Team */}
-          <div className="bg-bg-surface border border-border-strong p-space-lg">
-            <div className="flex items-center justify-between pb-space-sm border-b border-border-hairline mb-space-sm">
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-[20px] text-fg-primary">group</span>
-                <h3 className="font-headline-sm font-bold text-fg-primary">Investigation Team &amp; Lab Pods</h3>
-              </div>
-              <span className="font-label-mono text-xs text-fg-muted">09 APPOINTED RESEARCHERS</span>
-            </div>
-
-            <div className="space-y-2">
-              {team.map((m) => (
-                <div key={m.role} className="p-space-sm border border-border-hairline bg-bg-canvas flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-8 h-8 flex items-center justify-center font-mono font-bold text-xs shrink-0 ${m.bg}`}>
-                      {m.role}
-                    </div>
-                    <div>
-                      <span className="font-bold text-fg-primary block text-sm">{m.name}</span>
-                      <span className="font-mono text-xs text-fg-muted block">{m.desc}</span>
-                    </div>
+      ) : projects.length === 0 ? (
+        <div className="p-space-xl bg-bg-surface border border-dashed border-border-strong text-center space-y-3">
+          <Icon name="biotech" size={32} className="text-fg-muted mx-auto" />
+          <h3 className="font-headline-sm font-bold text-lg">No Research Projects Registered Yet</h3>
+          <p className="font-mono text-xs text-fg-muted max-w-md mx-auto">
+            Launch your first sponsored or bilateral research project to begin tracking investigation milestones and team members.
+          </p>
+          <Button variant="signal" size="sm" onClick={() => setShowCreateModal(true)}>
+            + Create First Project
+          </Button>
+        </div>
+      ) : (
+        <div className="space-y-space-lg">
+          {projects.map((proj) => (
+            <div
+              key={proj.id}
+              className="bg-bg-surface border-2 border-border-strong p-space-lg space-y-space-md shadow-[2px_2px_0px_0px_rgba(24,24,27,0.06)]"
+            >
+              <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-space-md border-b border-border-hairline pb-space-sm">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 flex-wrap font-label-mono text-xs">
+                    <Badge variant={proj.status === 'ACTIVE' ? 'success' : 'signal'}>{proj.status}</Badge>
+                    <span className="font-mono text-fg-muted">#{proj.id.slice(0, 8).toUpperCase()}</span>
+                    {proj.research_area && (
+                      <>
+                        <span className="text-border-hairline">|</span>
+                        <span className="text-fg-primary font-bold">{proj.research_area}</span>
+                      </>
+                    )}
                   </div>
-                  <span className="font-mono text-[10px] px-2 py-0.5 bg-bg-subtle border border-border-hairline text-fg-secondary shrink-0">
-                    {m.tag}
+                  <h2 className="font-headline-sm text-xl font-bold text-fg-primary">
+                    {proj.title}
+                  </h2>
+                  <p className="text-body-sm text-fg-muted font-mono text-xs">
+                    {proj.funding_agency ? `Agency: ${proj.funding_agency} ` : ''}
+                    {proj.industry_partner ? `// Industry Partner: ${proj.industry_partner}` : ''}
+                  </p>
+                  {proj.description && (
+                    <p className="text-xs text-fg-secondary pt-1 font-sans">{proj.description}</p>
+                  )}
+                </div>
+
+                <div className="lg:text-right shrink-0 font-mono text-xs">
+                  <span className="text-fg-muted uppercase text-[10px] block">APPROVED GRANT VALUE</span>
+                  <span className="font-metric-tabular text-2xl font-bold text-status-success font-bold block tnum">
+                    ₹{Number(proj.funding_amount).toLocaleString()}
+                  </span>
+                  <span className="text-fg-muted text-[10px]">
+                    Progress: {proj.progress_percentage}%
                   </span>
                 </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Milestones & Statutory Deliverables */}
-          <div className="bg-bg-surface border border-border-strong p-space-lg">
-            <div className="flex items-center justify-between pb-space-sm border-b border-border-hairline mb-space-sm">
-              <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-[20px] text-fg-primary">flag</span>
-                <h3 className="font-headline-sm font-bold text-fg-primary">Milestones &amp; Statutory Deliverables</h3>
               </div>
-              <span className="font-label-mono text-xs text-status-success font-semibold">TRL-4 PROTOTYPE VERIFIED</span>
-            </div>
 
-            <div className="space-y-space-md">
-              {milestones.map((ms) => (
-                <div
-                  key={ms.id}
-                  className={`p-space-sm border ${
-                    ms.active ? 'border-accent-signal bg-yellow-50/20' : 'border-border-hairline bg-bg-canvas'
-                  } space-y-2`}
-                >
-                  <div className="flex items-center justify-between text-xs font-mono">
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-fg-primary bg-bg-subtle border px-1.5 py-0.5">{ms.id}</span>
-                      <span className="font-bold text-fg-primary text-sm">{ms.title}</span>
-                    </div>
-                    <span className="font-bold">{ms.date}</span>
+              {/* Milestones & Team Members Grid */}
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-space-md pt-1">
+                {/* Milestones (7 cols) */}
+                <div className="lg:col-span-7 space-y-2">
+                  <div className="flex justify-between items-center border-b pb-1">
+                    <span className="font-label-mono text-xs font-bold uppercase text-fg-primary">
+                      Milestones &amp; Deliverables ({proj.milestones?.length || 0})
+                    </span>
+                    <button
+                      onClick={() => setSelectedProjectForMilestone(proj)}
+                      className="font-label-mono text-[11px] text-fg-primary hover:underline"
+                    >
+                      + Add Milestone
+                    </button>
                   </div>
-                  <div className="flex items-center justify-between text-xs font-mono">
-                    <span className="text-fg-muted">{ms.status}</span>
-                    <span className="font-bold text-fg-primary">{ms.progress}%</span>
-                  </div>
-                  <div className="w-full h-1.5 bg-neutral-200 overflow-hidden">
-                    <div className="bg-fg-primary h-full" style={{ width: `${ms.progress}%` }} />
-                  </div>
+
+                  {!proj.milestones || proj.milestones.length === 0 ? (
+                    <p className="text-[11px] font-mono text-fg-muted p-2 bg-bg-canvas border">
+                      No milestones recorded yet. Click above to add statutory milestones.
+                    </p>
+                  ) : (
+                    proj.milestones.map((ms) => (
+                      <div key={ms.id} className="p-2 border border-border-hairline bg-bg-canvas space-y-1 font-mono text-xs">
+                        <div className="flex justify-between items-center">
+                          <span className="font-bold text-fg-primary">{ms.title}</span>
+                          <span className="text-[10px] px-1.5 py-0.5 bg-bg-subtle font-bold">{ms.status}</span>
+                        </div>
+                        <div className="w-full h-1 bg-neutral-200 overflow-hidden">
+                          <div className="bg-fg-primary h-full" style={{ width: `${ms.progress_percentage}%` }} />
+                        </div>
+                        {ms.due_date && (
+                          <div className="flex justify-between text-[10px] text-fg-muted">
+                            <span>DUE: {ms.due_date}</span>
+                            <span>{ms.progress_percentage}% Completed</span>
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  )}
                 </div>
-              ))}
-            </div>
-          </div>
-        </div>
 
-        {/* Right Column (5 cols): Telemetry & Budget Ledger */}
-        <div className="lg:col-span-5 space-y-space-lg">
-          {/* Real-Time Hardware Telemetry */}
-          <div className="bg-bg-surface border-2 border-border-strong p-space-lg space-y-space-md">
-            <div className="flex items-center justify-between border-b border-border-hairline pb-space-xs">
-              <span className="font-label-mono text-xs text-fg-muted uppercase">HARDWARE TESTBED TELEMETRY</span>
-              <span className="font-mono text-xs text-status-success font-bold">FPGA NODE ONLINE</span>
-            </div>
+                {/* Team Members (5 cols) */}
+                <div className="lg:col-span-5 space-y-2">
+                  <div className="flex justify-between items-center border-b pb-1">
+                    <span className="font-label-mono text-xs font-bold uppercase text-fg-primary">
+                      Investigation Team ({proj.members?.length || 0})
+                    </span>
+                    <button
+                      onClick={() => setSelectedProjectForMember(proj)}
+                      className="font-label-mono text-[11px] text-fg-primary hover:underline"
+                    >
+                      + Add Member
+                    </button>
+                  </div>
 
-            <div className="p-space-md bg-bg-subtle border border-border-hairline space-y-2 font-mono text-xs">
-              <div className="flex items-baseline justify-between">
-                <span className="text-fg-muted uppercase">CONSENSUS LATENCY</span>
-                <span className="font-metric-tabular text-2xl font-bold text-fg-primary tnum">1.24 ms</span>
+                  {!proj.members || proj.members.length === 0 ? (
+                    <p className="text-[11px] font-mono text-fg-muted p-2 bg-bg-canvas border">
+                      No team members logged.
+                    </p>
+                  ) : (
+                    proj.members.map((m) => (
+                      <div key={m.id} className="p-2 border border-border-hairline bg-bg-canvas flex justify-between items-center font-mono text-xs">
+                        <div>
+                          <span className="font-bold text-fg-primary block">{m.name}</span>
+                          <span className="text-[10px] text-fg-muted">{m.affiliation || m.email}</span>
+                        </div>
+                        <span className="font-label-mono text-[10px] px-2 py-0.5 bg-portal-primary text-portal-on-primary font-bold">
+                          {m.role}
+                        </span>
+                      </div>
+                    ))
+                  )}
+                </div>
               </div>
-              <span className="text-status-success text-xs font-bold block">-38% REDUCTION VS RAFT STANDARD</span>
-              <p className="text-[11px] text-fg-muted pt-1 border-t border-border-hairline">
-                Benchmarked on Xilinx Zynq UltraScale+ ZCU102 FPGA board executing Byzantine Fault Tolerant protocol over redundant CAN-FD bus.
-              </p>
             </div>
-          </div>
+          ))}
+        </div>
+      )}
 
-          {/* Grant Utilization & Budget Ledger */}
-          <div className="bg-bg-surface border border-border-strong p-space-lg space-y-space-md">
-            <div className="flex items-center justify-between border-b border-border-hairline pb-space-xs">
+      {/* Create Project Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+          <div className="bg-bg-surface border-2 border-border-strong w-full max-w-lg p-space-lg space-y-4 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center border-b pb-2">
+              <h3 className="font-bold text-lg font-headline-sm uppercase">Launch Research Lab Pod</h3>
+              <button onClick={() => setShowCreateModal(false)} className="font-bold text-sm">✕</button>
+            </div>
+            <form onSubmit={handleCreateProject} className="space-y-3 font-mono text-xs">
               <div>
-                <span className="font-label-mono text-xs text-fg-muted uppercase">FINANCIAL AUDIT</span>
-                <h4 className="font-headline-sm font-bold text-fg-primary">Grant Budget Ledger</h4>
+                <label className="block text-fg-muted uppercase text-[10px] mb-1">Project Title *</label>
+                <input
+                  type="text"
+                  required
+                  value={projectForm.title}
+                  onChange={(e) => setProjectForm({ ...projectForm, title: e.target.value })}
+                  className="w-full p-2 bg-bg-canvas border text-fg-primary outline-none"
+                  placeholder="e.g. Byzantine Consensus for Aerospace Edge"
+                />
               </div>
-              <span className="font-label-mono text-xs bg-bg-subtle border px-2 py-0.5">₹48.5L TOTAL</span>
-            </div>
-
-            <div className="space-y-space-sm font-mono text-xs">
-              {budget.map((b) => (
-                <div key={b.head} className="p-2 border border-border-hairline bg-bg-canvas space-y-1">
-                  <div className="flex justify-between">
-                    <span className="font-bold text-fg-primary">{b.head}</span>
-                    <span className="text-fg-muted">{b.percent}%</span>
-                  </div>
-                  <div className="w-full h-1 bg-neutral-200 overflow-hidden">
-                    <div className="bg-fg-primary h-full" style={{ width: `${b.percent}%` }} />
-                  </div>
-                  <div className="flex justify-between text-[10px] text-fg-muted">
-                    <span>SPENT: {b.spent}</span>
-                    <span>ALLOCATED: {b.allocated}</span>
-                  </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-fg-muted uppercase text-[10px] mb-1">Research Area</label>
+                  <input
+                    type="text"
+                    value={projectForm.research_area}
+                    onChange={(e) => setProjectForm({ ...projectForm, research_area: e.target.value })}
+                    className="w-full p-2 bg-bg-canvas border text-fg-primary outline-none"
+                    placeholder="e.g. Distributed Systems"
+                  />
                 </div>
-              ))}
-            </div>
+                <div>
+                  <label className="block text-fg-muted uppercase text-[10px] mb-1">Funding Amount (INR)</label>
+                  <input
+                    type="number"
+                    value={projectForm.funding_amount}
+                    onChange={(e) => setProjectForm({ ...projectForm, funding_amount: parseFloat(e.target.value) || 0 })}
+                    className="w-full p-2 bg-bg-canvas border text-fg-primary outline-none"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-fg-muted uppercase text-[10px] mb-1">Funding Agency</label>
+                  <input
+                    type="text"
+                    value={projectForm.funding_agency}
+                    onChange={(e) => setProjectForm({ ...projectForm, funding_agency: e.target.value })}
+                    className="w-full p-2 bg-bg-canvas border text-fg-primary outline-none"
+                    placeholder="e.g. DRDO / DST / ISRO"
+                  />
+                </div>
+                <div>
+                  <label className="block text-fg-muted uppercase text-[10px] mb-1">Industry Partner</label>
+                  <input
+                    type="text"
+                    value={projectForm.industry_partner}
+                    onChange={(e) => setProjectForm({ ...projectForm, industry_partner: e.target.value })}
+                    className="w-full p-2 bg-bg-canvas border text-fg-primary outline-none"
+                    placeholder="e.g. TechNova Labs"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-fg-muted uppercase text-[10px] mb-1">Description / Abstract</label>
+                <textarea
+                  rows={3}
+                  value={projectForm.description}
+                  onChange={(e) => setProjectForm({ ...projectForm, description: e.target.value })}
+                  className="w-full p-2 bg-bg-canvas border text-fg-primary outline-none"
+                />
+              </div>
+              <div className="flex justify-end gap-2 pt-2 border-t">
+                <Button variant="outline" size="sm" type="button" onClick={() => setShowCreateModal(false)}>Cancel</Button>
+                <Button variant="signal" size="sm" type="submit" disabled={submitting}>
+                  {submitting ? 'Creating...' : 'Launch Pod'}
+                </Button>
+              </div>
+            </form>
           </div>
         </div>
-      </div>
-    </div>
+      )}
+
+      {/* Add Milestone Modal */}
+      {selectedProjectForMilestone && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+          <div className="bg-bg-surface border-2 border-border-strong w-full max-w-md p-space-lg space-y-4">
+            <div className="flex justify-between items-center border-b pb-2">
+              <h3 className="font-bold text-base font-headline-sm uppercase">Add Milestone</h3>
+              <button onClick={() => setSelectedProjectForMilestone(null)} className="font-bold text-sm">✕</button>
+            </div>
+            <form onSubmit={handleAddMilestone} className="space-y-3 font-mono text-xs">
+              <div>
+                <label className="block text-fg-muted uppercase text-[10px] mb-1">Milestone Title *</label>
+                <input
+                  type="text"
+                  required
+                  value={milestoneForm.title}
+                  onChange={(e) => setMilestoneForm({ ...milestoneForm, title: e.target.value })}
+                  className="w-full p-2 bg-bg-canvas border text-fg-primary outline-none"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-fg-muted uppercase text-[10px] mb-1">Due Date</label>
+                  <input
+                    type="date"
+                    value={milestoneForm.due_date}
+                    onChange={(e) => setMilestoneForm({ ...milestoneForm, due_date: e.target.value })}
+                    className="w-full p-2 bg-bg-canvas border text-fg-primary outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-fg-muted uppercase text-[10px] mb-1">Progress (%)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={milestoneForm.progress_percentage}
+                    onChange={(e) => setMilestoneForm({ ...milestoneForm, progress_percentage: parseInt(e.target.value) || 0 })}
+                    className="w-full p-2 bg-bg-canvas border text-fg-primary outline-none"
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end gap-2 pt-2 border-t">
+                <Button variant="outline" size="sm" type="button" onClick={() => setSelectedProjectForMilestone(null)}>Cancel</Button>
+                <Button variant="signal" size="sm" type="submit" disabled={submitting}>
+                  {submitting ? 'Saving...' : 'Add Milestone'}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Add Member Modal */}
+      {selectedProjectForMember && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+          <div className="bg-bg-surface border-2 border-border-strong w-full max-w-md p-space-lg space-y-4">
+            <div className="flex justify-between items-center border-b pb-2">
+              <h3 className="font-bold text-base font-headline-sm uppercase">Add Team Researcher</h3>
+              <button onClick={() => setSelectedProjectForMember(null)} className="font-bold text-sm">✕</button>
+            </div>
+            <form onSubmit={handleAddMember} className="space-y-3 font-mono text-xs">
+              <div>
+                <label className="block text-fg-muted uppercase text-[10px] mb-1">Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={memberForm.name}
+                  onChange={(e) => setMemberForm({ ...memberForm, name: e.target.value })}
+                  className="w-full p-2 bg-bg-canvas border text-fg-primary outline-none"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-fg-muted uppercase text-[10px] mb-1">Role</label>
+                  <select
+                    value={memberForm.role}
+                    onChange={(e) => setMemberForm({ ...memberForm, role: e.target.value as any })}
+                    className="w-full p-2 bg-bg-canvas border text-fg-primary outline-none"
+                  >
+                    <option value="CO_PI">Co-Principal Investigator</option>
+                    <option value="INDUSTRY_LEAD">Industry Partner Lead</option>
+                    <option value="JRF">Junior Research Fellow</option>
+                    <option value="SRF">Senior Research Fellow</option>
+                    <option value="STUDENT_RESEARCHER">Student Researcher</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-fg-muted uppercase text-[10px] mb-1">Affiliation</label>
+                  <input
+                    type="text"
+                    value={memberForm.affiliation}
+                    onChange={(e) => setMemberForm({ ...memberForm, affiliation: e.target.value })}
+                    className="w-full p-2 bg-bg-canvas border text-fg-primary outline-none"
+                    placeholder="e.g. ECE Dept"
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end gap-2 pt-2 border-t">
+                <Button variant="outline" size="sm" type="button" onClick={() => setSelectedProjectForMember(null)}>Cancel</Button>
+                <Button variant="signal" size="sm" type="submit" disabled={submitting}>
+                  {submitting ? 'Saving...' : 'Add Member'}
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </NodePageShell>
   );
 }
-

@@ -41,7 +41,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <div className="flex items-center justify-between">
             <span className="font-headline-sm text-body-md font-bold text-fg-primary uppercase truncate">{nodeName}</span>
             {nodeLevel && (
-              <span className="font-label-mono text-[10px] bg-accent-signal text-fg-primary px-1 py-0.5 border border-border-strong font-bold">
+              <span className="font-label-mono text-[10px] bg-portal-primary text-portal-on-primary px-1 py-0.5 border border-border-strong font-bold">
                 {nodeLevel}
               </span>
             )}
@@ -69,11 +69,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 href={link.href}
                 className={`flex items-center gap-space-sm px-space-md py-2.5 transition-colors border-l-2 ${
                   isActive
-                    ? 'bg-bg-subtle text-fg-primary border-accent-signal font-bold'
+                    ? 'bg-portal-primary-soft/40 text-fg-primary border-portal-primary font-bold shadow-[inset_2px_0px_0px_0px_var(--portal-primary)]'
                     : 'text-fg-muted hover:text-fg-primary hover:bg-bg-subtle/50 border-transparent'
                 }`}
               >
-                <Icon name={link.icon} size={18} />
+                <span className={isActive ? 'text-portal-primary' : ''}>
+                  <Icon name={link.icon} size={18} />
+                </span>
                 <span>{link.label}</span>
               </Link>
             );

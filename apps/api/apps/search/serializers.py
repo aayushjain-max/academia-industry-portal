@@ -5,3 +5,6 @@ class SearchHistorySerializer(serializers.ModelSerializer):
     class Meta:
         model = SearchHistory
         fields = '__all__'
+
+SearchSerializer = SearchHistorySerializer
+

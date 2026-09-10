@@ -22,6 +22,7 @@ export interface SkillRadarChartProps {
   data?: SkillRadarItem[];
   className?: string;
   height?: number;
+  color?: string;
 }
 
 const defaultData: SkillRadarItem[] = [
@@ -37,11 +38,11 @@ const CustomTooltip = ({ active, payload }: any) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
     return (
-      <div className="bg-fg-primary text-bg-surface border border-border-strong p-2 shadow-[2px_2px_0px_0px_#FACC15] font-mono text-[11px]">
-        <span className="font-bold text-accent-signal block mb-1 uppercase tracking-wider">{data.subject}</span>
+      <div className="bg-fg-primary text-bg-surface border border-border-strong p-2 shadow-[2px_2px_0px_0px_var(--portal-primary,#3B82F6)] font-mono text-[11px]">
+        <span className="font-bold text-portal-primary block mb-1 uppercase tracking-wider">{data.subject}</span>
         <div className="flex justify-between gap-4">
           <span className="text-neutral-400">Candidate:</span>
-          <span className="font-bold text-accent-signal">{data.candidate}%</span>
+          <span className="font-bold text-portal-primary">{data.candidate}%</span>
         </div>
         <div className="flex justify-between gap-4">
           <span className="text-neutral-400">Industry Target:</span>
@@ -63,19 +64,20 @@ export const SkillRadarChart: React.FC<SkillRadarChartProps> = ({
   data = defaultData,
   className = '',
   height = 320,
+  color = '#3B82F6',
 }) => {
   return (
     <div className={`w-full bg-bg-surface border border-border-strong p-space-md ${className}`}>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-space-xs border-b border-border-hairline mb-space-sm gap-2">
         <div className="flex items-center gap-2">
-          <span className="w-2.5 h-2.5 bg-accent-signal border border-border-strong" />
+          <span className="w-2.5 h-2.5 bg-portal-primary border border-border-strong" />
           <span className="font-label-mono text-label-mono uppercase font-bold text-fg-primary">
             RADAR PROFILE // 6-AXIS COMPETENCY MATRIX
           </span>
         </div>
         <div className="flex items-center gap-3 font-label-mono text-[10px] text-fg-muted">
           <span className="flex items-center gap-1.5">
-            <span className="w-2 h-2 bg-accent-signal border border-border-strong inline-block" />
+            <span className="w-2 h-2 bg-portal-primary border border-border-strong inline-block" />
             CANDIDATE
           </span>
           <span className="flex items-center gap-1.5">
@@ -112,10 +114,10 @@ export const SkillRadarChart: React.FC<SkillRadarChartProps> = ({
             <Radar
               name="Candidate Score"
               dataKey="candidate"
-              stroke="#EAB308"
+              stroke={color}
               strokeWidth={2}
-              fill="#FACC15"
-              fillOpacity={0.45}
+              fill={color}
+              fillOpacity={0.4}
             />
           </RadarChart>
         </ResponsiveContainer>

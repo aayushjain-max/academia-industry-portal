@@ -50,12 +50,21 @@ class AnalyticsViewSet(viewsets.ModelViewSet):
             for s in skill_counts
         ]
 
-        skill_gaps = [
-            {"skill": "Docker / K8s", "studentAvg": 45.0, "industryRequirement": 80.0},
-            {"skill": "System Design", "studentAvg": 55.0, "industryRequirement": 80.0},
-            {"skill": "PostgreSQL Optimization", "studentAvg": 65.0, "industryRequirement": 85.0},
-            {"skill": "Python Microservices", "studentAvg": 75.0, "industryRequirement": 85.0},
-        ]
+        # Dynamically calculate skill gaps based on active opportunities vs student skills
+        top_opp_skills = Skill.objects.annotate(
+            opp_count=Count('opportunities', filter=Q(opportunities__status='ACTIVE'))
+        ).order_by('-opp_count')[:6]
+
+        skill_gaps = []
+        for s in top_opp_skills:
+            st_skills = s.student_skills.all()
+            avg_score = st_skills.aggregate(avg=Avg('verified_score'))['avg'] or 50.0
+            req_score = 80.0
+            skill_gaps.append({
+                "skill": s.name,
+                "studentAvg": round(float(avg_score), 1),
+                "industryRequirement": req_score
+            })
 
         data = {
             "totalStudents": total_students,
@@ -69,37 +78,41 @@ class AnalyticsViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'], url_path='skill-demand-heatmap', permission_classes=[permissions.IsAuthenticated])
     def skill_demand_heatmap(self, request):
-        """Aggregates demand based on active opportunity skill counts."""
-        skills = Skill.objects.all()[:10]
+        """Aggregates demand based on active opportunity skill counts using ORM annotation."""
+        skills = Skill.objects.annotate(
+            opp_count=Count('opportunities', filter=Q(opportunities__status='ACTIVE'))
+        ).order_by('-opp_count')[:15]
+
         heatmap = []
+        total_opps = max(Opportunity.objects.filter(status='ACTIVE').count(), 1)
         for s in skills:
-            opp_count = Opportunity.objects.filter(skills=s).count() if hasattr(Opportunity, 'skills') else 1
+            opp_count = s.opp_count
+            demand_pct = min(100, round((opp_count / total_opps) * 100))
             heatmap.append({
                 "region": "National",
-                "domain": s.category if hasattr(s, 'category') else "Engineering",
+                "domain": getattr(s, 'category', 'Engineering') or 'Engineering',
                 "skill": s.name,
-                "demandScore": min(99, max(40, 60 + opp_count * 5)),
-                "growth": f"+{min(50, 15 + opp_count * 3)}%"
+                "demandScore": max(10, demand_pct),
+                "growth": f"+{min(50, max(5, opp_count * 4))}%"
             })
-        if not heatmap:
-            heatmap = [
-                {"region": "National", "domain": "Cloud Infrastructure", "skill": "Docker & Kubernetes", "demandScore": 96, "growth": "+42%"},
-                {"region": "National", "domain": "Backend Systems", "skill": "FastAPI & Python", "demandScore": 92, "growth": "+35%"},
-                {"region": "National", "domain": "Databases", "skill": "PostgreSQL & Query Tuning", "demandScore": 89, "growth": "+27%"},
-                {"region": "National", "domain": "Frontend Architecture", "skill": "Next.js & TypeScript", "demandScore": 88, "growth": "+31%"},
-            ]
         return Response(heatmap, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['get'], url_path='industry-trends', permission_classes=[permissions.IsAuthenticated])
     def industry_trends(self, request):
-        open_positions = Opportunity.objects.count()
+        open_positions = Opportunity.objects.filter(status='ACTIVE').count()
         applicants_total = Application.objects.count()
         shortlisted_total = Application.objects.filter(status__in=[ApplicationStatus.SHORTLISTED, ApplicationStatus.ACCEPTED]).count()
+
+        top_skills = list(
+            Skill.objects.annotate(opp_count=Count('opportunities'))
+            .order_by('-opp_count')
+            .values_list('name', flat=True)[:6]
+        )
 
         data = {
             "openPositions": open_positions,
             "applicantsTotal": applicants_total,
             "shortlistedTotal": shortlisted_total,
-            "topDemandedSkills": ["Python", "Docker", "FastAPI", "React", "TypeScript", "PostgreSQL"]
+            "topDemandedSkills": top_skills or ["Python", "Docker", "FastAPI", "React", "PostgreSQL"]
         }
         return Response(data, status=status.HTTP_200_OK)

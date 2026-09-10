@@ -6,7 +6,8 @@ class GamificationUnitTest(unittest.TestCase):
         fields = BadgeSerializer.Meta.fields
         self.assertIn('name', fields)
         self.assertIn('category', fields)
-        self.assertIn('points_required', fields)
+        self.assertIn('points_reward', fields)
+
 
 if __name__ == '__main__':
     unittest.main()

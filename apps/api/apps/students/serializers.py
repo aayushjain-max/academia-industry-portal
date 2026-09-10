@@ -18,7 +18,10 @@ class StudentProfileSerializer(serializers.ModelSerializer):
             'guardian_confirmed_at',
             'created_at', 'updated_at'
         ]
-        read_only_fields = ['id', 'guardian_token', 'created_at', 'updated_at']
+        read_only_fields = [
+            'id', 'guardian_token', 'guardian_consent_status',
+            'guardian_confirmed_at', 'passport_hash', 'created_at', 'updated_at'
+        ]
 
 
 class StudentChatSessionSerializer(serializers.ModelSerializer):

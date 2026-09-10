@@ -70,7 +70,7 @@ export default function StudentDashboardPage() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-space-md border-b border-border-strong gap-space-md">
         <div>
           <div className="flex items-center gap-space-xs font-label-mono text-label-mono text-fg-muted uppercase">
-            <span className="w-2 h-2 bg-accent-signal border border-border-strong" />
+            <span className="w-2 h-2 bg-portal-primary border border-border-strong" />
             <span>NODE: {passport?.student_id || 'STU-ACTIVE'} // CANDIDATE VERIFIED</span>
             <span className="text-border-hairline">|</span>
             <span className="text-status-success font-semibold">{passport?.accreditation_tier || 'TIER 01 ACCREDITED'}</span>
@@ -86,7 +86,7 @@ export default function StudentDashboardPage() {
         <div className="flex items-center gap-space-sm self-start sm:self-auto">
           <Link
             href="/student/skill-gaps"
-            className="px-space-md py-2 bg-accent-signal text-fg-primary font-label-mono text-label-mono uppercase hover:bg-accent-signal-hover transition-colors border border-border-strong font-bold shadow-[2px_2px_0px_0px_#18181B]"
+            className="px-space-md py-2 bg-portal-primary text-portal-on-primary font-label-mono text-label-mono uppercase hover:bg-portal-primary-hover transition-colors border border-border-strong font-bold shadow-[2px_2px_0px_0px_#18181B]"
           >
             Run Diagnostic Scan
           </Link>
@@ -185,7 +185,7 @@ export default function StudentDashboardPage() {
               </div>
               <Link
                 href="/student/skill-gaps"
-                className="px-space-md py-2 bg-fg-primary text-bg-surface font-label-mono text-label-mono uppercase hover:bg-accent-signal hover:text-fg-primary transition-colors inline-flex items-center gap-1.5 border border-border-strong font-semibold"
+                className="px-space-md py-2 bg-fg-primary text-bg-surface font-label-mono text-label-mono uppercase hover:bg-portal-primary hover:text-portal-on-primary transition-colors inline-flex items-center gap-1.5 border border-border-strong font-semibold"
               >
                 <span className="material-symbols-outlined text-[16px]">play_arrow</span>
                 <span>Start Learning</span>
@@ -193,7 +193,7 @@ export default function StudentDashboardPage() {
             </div>
 
             <div className="mt-space-md">
-              <SkillRadarChart height={260} className="mb-space-md border-0 p-0" />
+              <SkillRadarChart height={260} className="mb-space-md border-0 p-0" color="#3B82F6" />
             </div>
 
             <div className="mt-space-md space-y-space-md">
@@ -236,7 +236,7 @@ export default function StudentDashboardPage() {
               </div>
               <Link
                 href="/student/applications"
-                className="font-label-mono text-xs text-fg-primary underline hover:text-accent-signal"
+                className="font-label-mono text-xs text-fg-primary underline hover:text-portal-primary"
               >
                 View All ({String(displayedApplications.length).padStart(2, '0')})
               </Link>
@@ -277,7 +277,7 @@ export default function StudentDashboardPage() {
                   <p className="font-body-md text-fg-muted mb-2">No active applications found.</p>
                   <Link
                     href="/student/opportunities"
-                    className="font-label-mono text-xs text-fg-primary underline font-bold hover:text-accent-signal"
+                    className="font-label-mono text-xs text-fg-primary underline font-bold hover:text-portal-primary"
                   >
                     Explore Matched Opportunities →
                   </Link>
@@ -291,8 +291,8 @@ export default function StudentDashboardPage() {
         <div className="lg:col-span-5 space-y-space-lg">
           {/* Quick Action Card */}
           <div className="border-2 border-border-strong bg-neutral-950 text-bg-surface p-space-lg">
-            <div className="flex items-center gap-2 font-label-mono text-[11px] text-accent-signal uppercase mb-space-xs font-bold">
-              <span className="w-2 h-2 bg-accent-signal inline-block" />
+            <div className="flex items-center gap-2 font-label-mono text-[11px] text-portal-primary uppercase mb-space-xs font-bold">
+              <span className="w-2 h-2 bg-portal-primary inline-block" />
               <span>CAREER ACCELERATOR</span>
             </div>
             <h3 className="font-headline-sm text-body-lg font-bold text-bg-surface">
@@ -302,8 +302,8 @@ export default function StudentDashboardPage() {
               Proctored assessments provide cryptographic proof of proficiency for employer shortlisting.
             </p>
             <Link
-              href="/student/assessments"
-              className="block w-full text-center bg-accent-signal text-fg-primary py-2.5 font-label-mono text-label-mono uppercase font-bold hover:bg-accent-signal-hover transition-colors border border-accent-signal"
+              href="/student/assessment"
+              className="block w-full text-center bg-portal-primary text-portal-on-primary py-2.5 font-label-mono text-label-mono uppercase font-bold hover:bg-portal-primary-hover transition-colors border border-border-strong"
             >
               Take Assessment
             </Link>
